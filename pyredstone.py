@@ -602,8 +602,8 @@ def set_time(time):
     return console_cmd("time set %s" % (str(time)))
 
 def get_players():
-    cmd = console_cmd("list")
-    _call(cmd)
+    if console_cmd("list") == False:
+        return None
     cnt = 0
     ret_list = []
     for line in reversed(open("%s/server.log" % minecraft_dir).readlines()):
