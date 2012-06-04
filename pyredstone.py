@@ -1,6 +1,4 @@
 import subprocess
-
-
 import time
 import datetime
 import sys
@@ -29,7 +27,7 @@ def _call(cmd):
     try:
         subprocess.check_output(cmd, shell=True)
         return True
-    except CalledProcessError, e:
+    except subprocess.CalledProcessError, e:
         #print e.returncode, e.output
         return False
     
