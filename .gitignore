@@ -1,1 +1,5 @@
 cherrypy
+cherrypy.tar.gz
+*~
+*.pyc
+*.py1

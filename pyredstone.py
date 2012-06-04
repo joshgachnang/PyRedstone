@@ -1,10 +1,13 @@
 import subprocess
+
+
 import time
 import datetime
 import sys
 import os
 import shutil
 import urllib2
+
 import socket 
 import collections
 
@@ -19,10 +22,8 @@ else:
 backup_dir = '/home/josh/minecraft_backup'
 scp_server = 'josh@thepronserver'
 scp_server_target = '/backup/minecraft'
-
-# Debug info
+       
 use_test_data = False
-test_data = {'status': True, }
 
 def _call(cmd):
     try:
@@ -47,8 +48,6 @@ def twitter_say(message):
         return True
         
 def status():
-    if use_test_data:
-        return test_data['status']
     try:
         # The second column of each entry is a pid. See if that pid is in /proc/. Obviously Linux centric..
         out = subprocess.check_output('ps aux | grep  tmux | grep "%s"' % session_name, shell=True)
@@ -63,44 +62,36 @@ def status():
         return False
         
 def server_restart(quick=False):
-    """ Gracefully restarts the server. Quick will not give warning messages to users. """
     if status():
         server_stop(quick)
     server_start()
     return status()
     
 def server_stop(quick=False):
-    """ Gracefully stops the server. Quick will not give warning messages to users. 
-    Otherwise, they will be given 1 minute of warning messages.
-    
-    """
-    if use_test_data:
-        test_data['status'] == False
-
     if not status():
         #print "Server isn't running"
         return False
     if not quick:
-        if console_cmd("say Server going down in 1 minute") == False:
+        cmd = console_cmd("say Server going down in 1 minute")
+        if _call(cmd) == False:
             return False
         time.sleep(30)
-        if console_cmd("say Server going down in 30 seconds") == False:
+        cmd = console_cmd("say Server going down in 30 seconds")
+        if _call(cmd) == False:
             return False
         time.sleep(15)
-        if console_cmd("say Server going down in 15 seconds") == False:
+        cmd = console_cmd("say Server going down in 15 seconds")
+        if _call(cmd) == False:
             return False
         time.sleep(15)
-    if console_cmd("say Server going down NOW! See you in 1 minute!") == False:
+        
+    cmd = console_cmd("say Server going down NOW! See you in 1 minute!")
+    if _call(cmd) == False:
         return False
     time.sleep(5)
     return console_cmd("stop")
 
 def server_start():
-    if use_test_data:
-        if test_data['status'] == True:
-            return False
-        else:
-            return True
     if status():
         #print "Server already running in tmux session %s" % session_name
         return False
@@ -111,43 +102,32 @@ def server_start():
     return True
 
 def prepare_save():
-    """ Stops the server from committing new changes during a save. 
-    Returns False if the commands fail, True otherwise.
-    
-    """
     if console_cmd("save-all") == False:
         return False
     time.sleep(1)
     return console_cmd("save-off")
     
 def after_save():
-    """ Reenables saving. 
-    Returns False if the command fails, True otherwise.
-    
-    """
-    return console_cmd("save-on")
+    console_cmd("save-on")
+    time.sleep(1)
+    return True
 
 def server_say(message):
-    """ Sends a message to the players in the server, which will come from '[CONSOLE]'.
-    Return False if the command fails, True otherwise.
-    """
     if message == None:
         #print "No message!"
         return False
-    return console_cmd("say %s" % message)
+    return console_cmd("say %s" % (message))
 
 def server_quick_stop():
-    """ Stops the server without warning to the users.
-    Returns False if the server isn't running or the command fails, True otherwise.
-    """
     if not status():
         #print "Server isn't running"
         return False
-    return console_cmd("stop")
+    console_cmd("stop")
+    time.sleep(3)
+    return True
     #print 'Server stopped abruptly'
     
 def give(player, item_id, num):
-    """ Gives player num amount of item item_id """
     while num > 0:
         if num > 64:
             if console_cmd("give %s %s %s" % (player, item_id, "64")) == False:
@@ -197,12 +177,6 @@ def is_ip(ip):
     except socket.error:
         return False
 
-def get_connected_users():
-    if console_cmd("list") == False:
-        # Should be a raise..
-        return None
-    for line in reversed(open(os.path.join(minecraft_dir, 'server.log')).readlines()):
-
 def get_banned(player_type=None):
     user_list = []
     if player_type not in ('player', 'ip', None):
@@ -243,20 +217,20 @@ def ban(player_or_ip):
         # IP! 
         if is_banned(player_or_ip, 'ip'):
             return None
-        return _call('tmux send -t %s "ban-ip %s" "enter"' % (session_name, player_or_ip))
+        return console_cmd("ban-ip %s" % (player_or_ip))
     else:
         # Must be a player..or invalid IP
         if is_banned(player_or_ip, 'player'):
             return None
-        return _call('tmux send -t %s "ban %s" "enter"' % (session_name,  player_or_ip))
+        return console_cmd("ban %s" % ( player_or_ip))
         
         
 def pardon(player_or_ip):
     # Check if IP or player:
     if is_ip(player_or_ip):
-        return _call('tmux send -t %s "pardon-ip %s" "enter"' % (session_name, player_or_ip))
+        return console_cmd("pardon-ip %s" % (player_or_ip))
     else:
-        return _call('tmux send -t %s "pardon %s" "enter"' % (session_name, player_or_ip))
+        return console_cmd("pardon %s" % (player_or_ip))
         
 def op(player):
     with open("%s/ops.txt" % (minecraft_dir), 'r') as users:
@@ -264,18 +238,18 @@ def op(player):
             if user == player:
                 # IP already banned
                 return None
-    _call('tmux send -t %s "op %s" "enter"' % (session_name, player))
+    console_cmd("op %s" % (player))
         
 def deop(player):
-    _call('tmux send -t %s "deop %s" "enter"' % (session_name, player))
+    console_cmd("deop %s" % (player))
     
 def add_to_whitelist(player):
     if player not in get_whitelist():
-        _call('tmux send -t %s "whitelist add %s" "enter"' % (session_name, player))
+        console_cmd("whitelist add %s" % (player))
         _whitelist_reload()
         
 def remove_from_whitelist(player):
-    _call('tmux send -t %s "whitelist remove %s" "enter"' % (session_name, player))
+    console_cmd("whitelist remove %s" % (player))
     _whitelist_reload()
     
 # Returns
@@ -358,7 +332,6 @@ def parse_settings(filename):
 def write_settings(filename, properties):
     # First find out if just a list, key=value, or YAML.
     pass
-
 def parse_minecraft_settings(filename='server.properties'):
     #p = {}
     p = collections.OrderedDict()
@@ -480,3 +453,291 @@ def get_time():
 
 def get_day():
     import nbt
+    n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
+    if n == None:
+        return None
+    else:
+        return n[0]["Time"].value / 24000
+        
+def list_disabled_plugins():
+    plugin_list = []
+    for ob in os.listdir("%s/plugins_disabled" % minecraft_dir):
+        if not os.path.isdir("%s/plugins_disabled/%s" % (minecraft_dir, ob)) and ob[-4:] == '.jar':
+            plugin_list.append(ob[:-4])
+    return plugin_list
+
+def list_plugins():
+    plugin_list = []
+    for ob in os.listdir("%s/plugins" % minecraft_dir):
+        if not os.path.isdir("%s/plugins/%s" % (minecraft_dir, ob)) and ob[-4:] == '.jar':
+            plugin_list.append(ob[:-4])
+    return plugin_list
+
+# Returns True if enabled, False if not enabled
+def is_plugin_enabled(name):
+    plugins = list_plugins()
+    return name in plugins
+
+def disable_plugin(name):
+    # Check if plugin is enabled
+    if not os.path.exists("%s/plugins/%s.jar" % (minecraft_dir, name)):
+        print "plugin not enabled"
+        return False
+    # Check that plugin 
+    shutil.move("%s/plugins/%s.jar"	% (minecraft_dir, name), "%s/plugins_disabled/" % (minecraft_dir, ))
+    if os.path.exists("%s/plugins/%s/" % (minecraft_dir, name)):
+        shutil.move("%s/plugins/%s/" % (minecraft_dir, name), "%s/plugins_disabled/" % (minecraft_dir, ))
+    return True
+    
+def enable_plugin(name):
+    # Check if plugin is already enabled
+    if name + '.jar' in os.listdir("%s/plugins" % minecraft_dir):
+                print "plugin already enabled"
+                return False
+    # Check if plugin exists in disabled
+    if not os.path.exists("%s/plugins_disabled/%s.jar" % (minecraft_dir, name)):
+        print "plugin doesn't exist in disabled directory. Try downloading it first."
+        return None
+    shutil.move("%s/plugins_disabled/%s.jar" % (minecraft_dir, name), "%s/plugins/" % (minecraft_dir, ))
+    if os.path.exists("%s/plugins_disabled/%s/" % (minecraft_dir, name)):
+            shutil.move("%s/plugins_disabled/%s/"    % (minecraft_dir, name), "%s/plugins/" % (minecraft_dir, ))
+    return True
+    
+def get_player_ip(player):
+    if os.path.exists("%s/server.log" % minecraft_dir):
+        for line in reversed(open("%s/server.log" % minecraft_dir).readlines()):
+            if "logged in with entity id" in line and session_name in line:
+                # avoid issue where user "josh"'s ip is used for user "joshua".
+                words = line.split()
+                if words[3] == player:
+                    ip_line = words[4]
+                    # Split at the : for the IP, leave off port, cut off first 2 characters = ip!
+                    return ip_line.split(':')[0][2:]
+
+def kick(player):
+    if player not in get_players():
+        print "Player %s not currently connected." % (player)
+        return False
+    console_cmd("kick %s" % (player))
+
+def player_gamemode(player, gamemode):
+    if gamemode != 0 and gamemode != 1:
+        return False
+    console_cmd("gamemode %s %s" % (player, gamemode))
+    return True
+    
+def teleport(player, target_player):
+    players = get_players()
+    if player not in players:
+        print "Player %s not currently connected." % (player)
+        return False
+    if target_player not in players:
+        print "Player %s not currently connected." % (target_player)
+        return False
+    console_cmd("tp %s %s" % (player, target_player))
+    return True
+    
+def give_xp(player, amount):
+    if player not in get_players():
+        print "Player %s not currently connected." % (player)
+        return False
+    if int(amount) > 5000 or int(amount) < 5000:
+        print "Amount must be between -5000 and 5000"
+        return False
+    console_cmd("xp %s %d" % (player, int(amount)))
+
+# Renew whitelist from disk. Call after adding or removing from whitelist.
+def _whitelist_reload():
+    return console_cmd("whitelist reload")
+
+def whisper(player, message):
+    if player not in get_players():
+        print "Player %s not currently connected." % (player)
+        return False
+    return console_cmd("tell %s %s" % (player, message))
+    
+def get_ops():
+    ops = []
+    if os.path.exists("%s/ops.txt" % minecraft_dir):
+        with open("%s/ops.txt" % minecraft_dir) as f:
+            for user in f:
+                if user[-1] == '\n':
+                    ops.append(user[:-1])
+                else:
+                    ops.append(user)
+        return ops
+    #print "No ops file"
+    return []
+    
+## Returns True if weather toggled on, False if toggled off.
+#def toggle_weather():
+    #cmd = console_cmd("toggledownfall" "enter"' % (session_name,)
+        #_call(cmd)
+    ## Avoid race condition
+    #time.sleep(0.5)
+    #if os.path.exists("%s/server.log" % minecraft_dir):
+        #for line in reversed(open("%s/server.log" % minecraft_dir).readlines()):
+            #if "Toggling downfall off" in line and session_name in line:
+                    #print line
+                    #return False
+            #elif "Toggling downfall on" in line and session_name in line:
+                    #print line
+                    #return True
+    #return False
+                    
+def start_weather():
+    if is_raining():
+        return False
+    else:
+        return console_cmd("toggledownfall")
+        
+def stop_weather():
+    if not is_raining():
+        return False
+    else:
+        return console_cmd("toggledownfall")
+
+def set_time(time):
+    if time < 0 or time > 24000:
+        #print "Invalid time, must be between 0 and 24000."
+        return False
+    return console_cmd("time set %s" % (str(time)))
+
+def get_players():
+    cmd = console_cmd("list")
+    _call(cmd)
+    cnt = 0
+    ret_list = []
+    for line in reversed(open("%s/server.log" % minecraft_dir).readlines()):
+        if "Connected players" in line and cnt < 20:
+            #print "winning line: ", line[:-5]
+            players = line[:-5].split()[5:]
+        elif cnt >= 20:
+            break
+        else:
+            cnt += 1
+            print line	
+            continue
+        # Remove commas from players
+        for player in players:
+            ret_list.append(player.replace(',', '', 1))
+        break
+    return ret_list
+
+def _santize_log_line(line):
+    line = line.replace('\x1b[0m', '')
+    line = line.replace('\x1b[35m', '')
+    line = line.replace('\n', '')
+    return line
+    
+# Get a number of lines from the log in reverse order (-1 for all).
+# Filter
+def get_logs(num_lines=-1, filter=None):
+    if filter not in ('chat', 'players', None):
+        #print "Invalid filter."
+        return None
+        
+    logfile = "%s/server.log" % minecraft_dir
+    if not os.path.exists(logfile):
+        #print "Log file doesn't exists"
+        return None
+        
+    cnt = 0
+    ret_list = []
+    for line in reversed(open(logfile).readlines()):
+        if filter == 'chat' and "<" in line and ">" in line and "[INFO]" in line:
+            l = _santize_log_line(line).split()
+            ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
+            cnt += 1
+        elif filter == 'chat' and "[Server]" in line:
+            l = _santize_log_line(line).split()
+            ret_list.append(("chat", l[0], l[1] , l[3], " ".join(l[4:])))
+            cnt += 1
+        elif filter == 'players':
+            if "logged in" in line or "logged out" in line or "lost connection" in line:
+                l = _santize_log_line(line).split()
+                if "logged in" in line:
+                    action = "logged in"
+                elif "logged out" in line or "lost connection" in line:
+                    action = "logged out"
+                ret_list.append(("players", l[0], l[1], l[3], action))
+                cnt += 1
+        elif filter == None:
+            ret_list.append(("none", _santize_log_line(line)))
+            cnt += 1
+        if num_lines > 0:
+            #print cnt, num_lines, cnt < num_lines
+            if int(cnt) >= int(num_lines):
+                #print 'a'
+                break
+    return ret_list
+
+def backup():
+    now = datetime.datetime.now()
+    if now.minute == 0:
+        print "Starting hourly save at hour %d" % now.hour
+        prepare_save()
+        backup_filename = "%s/%s-hourly-%d.tar.gz" % ( backup_dir, session_name, now.hour,)
+        _call('tar czvf %s %s %s %s' % (backup_filename, os.path.join(minecraft_dir, session_name), os.path.join(minecraft_dir, session_name + "_the_end"), os.path.join(minecraft_dir, session_name + "_nether") ))
+        #print "World backed up!"
+        after_save()
+        offsite_backup(backup_filename)
+        #print "Offsite backup complete!"
+        #return True
+    else:
+        #print "Script must have been called manually. Making separate backup."
+        prepare_save()
+        backup_filename = "%s/%s-manual-%d.tar.gz" % ( backup_dir, session_name, now.hour )
+        date_string = "%d-%d-%d_%d-%d" % (now.year, now.month, now.day, now.hour, now.minute)
+        _call('tar czvf %s %s' % (backup_filename, os.path.join(minecraft_dir, session_name) ))
+        #print "World backed up!"
+        after_save()
+        offsite_backup(backup_filename) 
+        #print "Offsite backup complete!"
+        #return True
+    # Daily backup, will keep 31 copies, then start overwriting.
+    if now.hour == 0 and now.minute == 0:
+        hourly_backup = "%s/%s-hourly-%d.tar.gz" % ( backup_dir, session_name, now.hour )
+        daily_backup = "%s/%s-daily-%d.tar.gz" % ( backup_dir, session_name, now.day )
+        try:
+            shutil.copy(hourly_backup, daily_backup)
+        except Error, e:
+            #print e
+            return False
+    return True
+
+# Assumes you already synced keys to scp_server and can login without a password
+def offsite_backup(filename):
+    if os.path.exists(filename):
+        return _call('scp filename %s:%s' % (scp_server, scp_server_target))
+    else:
+        #print "Backup file %s didn't exist for offsite backup." % filename
+        return False
+    
+def list_backups():
+    pass
+
+def _cli_help():
+    pass
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        cli_help()
+        sys.exit(1)
+    #print sys.argv
+    try:
+        import mccommands
+        function=getattr(mccommands, sys.argv[1])
+        if len(sys.argv) == 2:
+            print function()
+        elif len(sys.argv) == 3:
+            print function(sys.arv[2])
+        elif len(sys.argv) == 3:
+            print function(sys.arv[2], sys.arv[3])
+        elif len(sys.argv) == 3:
+            print function(sys.arv[2], sys.arv[3], sys.arv[4])
+        else:
+            _cli_help()
+    except AttributeError, e:
+        print "No such function."
+    #print results
