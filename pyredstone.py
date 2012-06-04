@@ -21,7 +21,7 @@ scp_server = 'josh@thepronserver'
 scp_server_target = '/backup/minecraft'
 
 # Debug info
-use_test_data = True
+use_test_data = False
 test_data = {'status': True, }
 
 def _call(cmd):
@@ -196,6 +196,12 @@ def is_ip(ip):
         return True
     except socket.error:
         return False
+
+def get_connected_users():
+    if console_cmd("list") == False:
+        # Should be a raise..
+        return None
+    for line in reversed(open(os.path.join(minecraft_dir, 'server.log')).readlines()):
 
 def get_banned(player_type=None):
     user_list = []
