@@ -22,7 +22,9 @@ else:
 backup_dir = '/home/josh/minecraft_backup'
 scp_server = 'josh@thepronserver'
 scp_server_target = '/backup/minecraft'
-    
+       
+use_test_data = False
+
 def _call(cmd):
     try:
         subprocess.check_output(cmd, shell=True)
@@ -31,7 +33,13 @@ def _call(cmd):
         #print e.returncode, e.output
         return False
     
-    
+def console_cmd(msg):
+    if use_test_data:
+        return True
+    """ Sends a message to the server console. """
+    cmd = 'tmux send -t %s "%s" "enter"' % (session_name, msg)
+    return _call(cmd) 
+
 #TODO: actually implement Twitter
 def twitter_say(message):
     if len(message) > 140:
@@ -64,25 +72,24 @@ def server_stop(quick=False):
         #print "Server isn't running"
         return False
     if not quick:
-        cmd = 'tmux send -t %s "say Server going down in 1 minute" "enter"' % session_name
+        cmd = console_cmd("say Server going down in 1 minute")
         if _call(cmd) == False:
             return False
         time.sleep(30)
-        cmd = 'tmux send -t %s "say Server going down in 30 seconds" "enter"' % session_name
+        cmd = console_cmd("say Server going down in 30 seconds")
         if _call(cmd) == False:
             return False
         time.sleep(15)
-        cmd = 'tmux send -t %s "say Server going down in 15 seconds" "enter"' % session_name
+        cmd = console_cmd("say Server going down in 15 seconds")
         if _call(cmd) == False:
             return False
         time.sleep(15)
         
-    cmd = 'tmux send -t %s "say Server going down NOW! See you in 1 minute!" "enter"' % session_name
+    cmd = console_cmd("say Server going down NOW! See you in 1 minute!")
     if _call(cmd) == False:
         return False
     time.sleep(5)
-    cmd = 'tmux send -t %s "stop" "enter"' % session_name
-    return _call(cmd)
+    return console_cmd("stop")
 
 def server_start():
     if status():
@@ -95,13 +102,13 @@ def server_start():
     return True
 
 def prepare_save():
-    if _call('tmux send -t %s "save-all" "enter"' % session_name) == False:
+    if console_cmd("save-all") == False:
         return False
     time.sleep(1)
-    return _call('tmux send -t %s "save-off" "enter"' % session_name)
+    return console_cmd("save-off")
     
 def after_save():
-    _call('tmux send -t %s "save-on" "enter"' % session_name)
+    console_cmd("save-on")
     time.sleep(1)
     return True
 
@@ -109,13 +116,13 @@ def server_say(message):
     if message == None:
         #print "No message!"
         return False
-    return _call('tmux send -t %s "say %s" "enter"' % (session_name, message))
+    return console_cmd("say %s" % (message))
 
 def server_quick_stop():
     if not status():
         #print "Server isn't running"
         return False
-    _call('tmux send -t %s "stop" "enter"' % session_name )
+    console_cmd("stop")
     time.sleep(3)
     return True
     #print 'Server stopped abruptly'
@@ -123,10 +130,10 @@ def server_quick_stop():
 def give(player, item_id, num):
     while num > 0:
         if num > 64:
-            if _call('tmux send -t %s "give %s %s %s" "enter"' % (session_name, player, item_id, "64")) == False:
+            if console_cmd("give %s %s %s" % (player, item_id, "64")) == False:
                 return False
         else:
-            if _call('tmux send -t %s "give %s %s %s" "enter"' % (session_name, player, item_id, str(num))) == False:
+            if console_cmd("give %s %s %s" % (player, item_id, str(num))) == False:
                 return False
         num = int(num) - 64
     return True
@@ -210,20 +217,20 @@ def ban(player_or_ip):
         # IP! 
         if is_banned(player_or_ip, 'ip'):
             return None
-        return _call('tmux send -t %s "ban-ip %s" "enter"' % (session_name, player_or_ip))
+        return console_cmd("ban-ip %s" % (player_or_ip))
     else:
         # Must be a player..or invalid IP
         if is_banned(player_or_ip, 'player'):
             return None
-        return _call('tmux send -t %s "ban %s" "enter"' % (session_name,  player_or_ip))
+        return console_cmd("ban %s" % ( player_or_ip))
         
         
 def pardon(player_or_ip):
     # Check if IP or player:
     if is_ip(player_or_ip):
-        return _call('tmux send -t %s "pardon-ip %s" "enter"' % (session_name, player_or_ip))
+        return console_cmd("pardon-ip %s" % (player_or_ip))
     else:
-        return _call('tmux send -t %s "pardon %s" "enter"' % (session_name, player_or_ip))
+        return console_cmd("pardon %s" % (player_or_ip))
         
 def op(player):
     with open("%s/ops.txt" % (minecraft_dir), 'r') as users:
@@ -231,18 +238,18 @@ def op(player):
             if user == player:
                 # IP already banned
                 return None
-    _call('tmux send -t %s "op %s" "enter"' % (session_name, player))
+    console_cmd("op %s" % (player))
         
 def deop(player):
-    _call('tmux send -t %s "deop %s" "enter"' % (session_name, player))
+    console_cmd("deop %s" % (player))
     
 def add_to_whitelist(player):
     if player not in get_whitelist():
-        _call('tmux send -t %s "whitelist add %s" "enter"' % (session_name, player))
+        console_cmd("whitelist add %s" % (player))
         _whitelist_reload()
         
 def remove_from_whitelist(player):
-    _call('tmux send -t %s "whitelist remove %s" "enter"' % (session_name, player))
+    console_cmd("whitelist remove %s" % (player))
     _whitelist_reload()
     
 # Returns
@@ -511,12 +518,12 @@ def kick(player):
     if player not in get_players():
         print "Player %s not currently connected." % (player)
         return False
-    _call('tmux send -t %s "kick %s" "enter"' % (session_name, player))
+    console_cmd("kick %s" % (player))
 
 def player_gamemode(player, gamemode):
     if gamemode != 0 and gamemode != 1:
         return False
-    _call('tmux send -t %s "gamemode %s %s" "enter"' % (session_name, player, gamemode))
+    console_cmd("gamemode %s %s" % (player, gamemode))
     return True
     
 def teleport(player, target_player):
@@ -527,7 +534,7 @@ def teleport(player, target_player):
     if target_player not in players:
         print "Player %s not currently connected." % (target_player)
         return False
-    _call('tmux send -t %s "tp %s %s" "enter"' % (session_name, player, target_player))
+    console_cmd("tp %s %s" % (player, target_player))
     return True
     
 def give_xp(player, amount):
@@ -537,18 +544,17 @@ def give_xp(player, amount):
     if int(amount) > 5000 or int(amount) < 5000:
         print "Amount must be between -5000 and 5000"
         return False
-    _call('tmux send -t %s "xp %s %d" "enter"' % (session_name, player, int(amount)))
+    console_cmd("xp %s %d" % (player, int(amount)))
 
 # Renew whitelist from disk. Call after adding or removing from whitelist.
 def _whitelist_reload():
-    return _call('tmux send -t %s "whitelist reload" "enter"' % (session_name, ))
-    
-    
+    return console_cmd("whitelist reload")
+
 def whisper(player, message):
     if player not in get_players():
         print "Player %s not currently connected." % (player)
         return False
-    return _call('tmux send -t %s "tell %s %s" "enter"' % (session_name, player, message))
+    return console_cmd("tell %s %s" % (player, message))
     
 def get_ops():
     ops = []
@@ -565,7 +571,7 @@ def get_ops():
     
 ## Returns True if weather toggled on, False if toggled off.
 #def toggle_weather():
-    #cmd = 'tmux send -t %s "toggledownfall" "enter"' % (session_name,)
+    #cmd = console_cmd("toggledownfall" "enter"' % (session_name,)
         #_call(cmd)
     ## Avoid race condition
     #time.sleep(0.5)
@@ -583,23 +589,22 @@ def start_weather():
     if is_raining():
         return False
     else:
-        return _call('tmux send -t %s "toggledownfall" "enter"' % (session_name,))
+        return console_cmd("toggledownfall")
         
 def stop_weather():
     if not is_raining():
         return False
     else:
-        return _call('tmux send -t %s "toggledownfall" "enter"' % (session_name,))
+        return console_cmd("toggledownfall")
 
 def set_time(time):
     if time < 0 or time > 24000:
         #print "Invalid time, must be between 0 and 24000."
         return False
-    cmd = 'tmux send -t %s "time set %s" "enter"' % (session_name, str(time))
-    return _call(cmd)        
+    return console_cmd("time set %s" % (str(time)))
 
 def get_players():
-    cmd = 'tmux send -t %s "list" "enter"' % session_name
+    cmd = console_cmd("list")
     _call(cmd)
     cnt = 0
     ret_list = []
