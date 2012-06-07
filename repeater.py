@@ -24,6 +24,7 @@ class Repeater():
         if username is None:
             return SyntaxError('username cannot be blank.')
         self.headers['Content-Type'] = 'application/json'
+        self.headers['Accept'] = 'text/plain'
         self.server_url = server_url
         self.username = username
         self.auth_token = ""
@@ -46,6 +47,7 @@ class Repeater():
     def send_request(self, jdata, url=""):
         """ Given a JSON dict, send it to the server """
         url = urlparse.urljoin(self.server_url, url)
+        print "Sending: ", url, ",", jdata, ",", self.headers
         req = urllib2.Request(url, jdata, self.headers)
         f = urllib2.urlopen(req)
         j = json.loads(f.read())
@@ -64,10 +66,13 @@ class Repeater():
         for item in get_list:
             action = item[0]
             args = item[1]
-            jdata["action_list"][action] = json.dumps({"action": action, "args": args})
+            jdata["action_list"][action] = {"action": action, "args": args}
         
-        print "Jdata is ", str(jdata)
-        response = self.send_request(str(jdata), "batch")
+        #print "Jdata is ", json.dumps(jdata)
+        
+        #print json.loads(json.dumps(jdata))
+        
+        response = self.send_request(json.dumps(jdata), "batch")
         if response is None:
             raise RepeaterEmptyResponse("Empty response received from the server")
         else:

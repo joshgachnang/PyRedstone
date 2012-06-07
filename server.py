@@ -71,25 +71,26 @@ class Root:
                 print "Batch requests require an action_list."
                 raise cherrypy.HTTPError(400, "Batch requests require an action_list.")
             # Process each action in action_list
-            for action in data_in.items():
+            for action in data_in["action_list"].items():
+                print action, action[action]
                 # Check that each action has a command and optional arg list
-                if "action" not in action:
+                if "action" not in action[action]:
                     print "Each item in action_list needs an action."
                     raise cherrypy.HTTPError(400, "Each item in action_list needs an action.")
-                if "args" not in action:
+                if "args" not in action[action]:
                     args = None
                 else:
-                    args = action["args"]
-                if action["action"] in prohibited_actions:
-                    print "Action %s prohibited" % action["action"]
-                    raise cherrypy.HTTPError(405, "Action %s prohibited" % action["action"])
+                    args = action[action]["args"]
+                if action[action]["action"] in prohibited_actions:
+                    print "Action %s prohibited" % action[action]["action"]
+                    raise cherrypy.HTTPError(405, "Action %s prohibited" % action[action]["action"])
                 # Try to get the function from pyredstone module. Then pass the arg list.
                 try:
-                    methodToCall = getattr(pyredstone, action["action"])
+                    methodToCall = getattr(pyredstone, action[action]["action"])
                     result = methodToCall(**args)
                 except AttributeError as e:
-                    print "Action %s not found." % action["action"]
-                    raise cherrypy.HTTPError(404, "Action %s not found." % action["action"])
+                    print "Action %s not found." % action[action]["action"]
+                    raise cherrypy.HTTPError(404, "Action %s not found." % action[action]["action"])
                 
                 response[action["action"]] = result
             print response

@@ -12,6 +12,6 @@ def test_json_batch():
     print repeater.batch([('get_players', {}), ('get_banned', {"player_type": "ip"})])
 
 if __name__ == '__main__':
-    test_json()
+    #test_json()
     print "Testing json batch"
     test_json_batch()
