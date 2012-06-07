@@ -93,7 +93,7 @@ class Root:
                     print "Action %s not found." % action
                     raise cherrypy.HTTPError(404, "Action %s not found." % action)
                 
-                response[action["action"]] = result
+                response[action] = result
             print response
             return response
         else:
