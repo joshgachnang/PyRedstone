@@ -9,11 +9,11 @@ def test_json():
 
 def test_json_batch():
     repeater = Repeater('http://nang.kicks-ass.net:7777', 'josh')
-    print repeater.batch([('get_players', {}), ('get_banned', {"player_type": "ip"})])
+    print repeater.batch([('get_players', {}), ('get_banned', {"player_type": "player"})])
     repeater = Repeater('http://nang.kicks-ass.net:7777', 'josh')
-    print repeater.batch([('get_players', {}), ('get_banned', {"player_type": "ip"})])
+    print repeater.batch([('get_players', {}), ('get_banned', {"player_type": "player"})])
     repeater = Repeater('http://nang.kicks-ass.net:7777', 'josh')
-    print repeater.batch([('get_players', {}), ('get_banned', {"player_type": "ip"})])
+    print repeater.batch([('get_players', {}), ('get_banned', {"player_type": "player"})])
 
 if __name__ == '__main__':
     #test_json()
