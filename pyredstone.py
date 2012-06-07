@@ -382,7 +382,7 @@ def get_plugin_config(name):
             import yaml
         except ImportError:
             print "Couldn't import module 'yaml'"
-        return yaml.load(open('%s/plugins/%s/config.yml' % (minecraft_dir, name)))		
+        return yaml.load(open('%s/plugins/%s/config.yml' % (minecraft_dir, name)))      
     # Check for text config file
     elif os.path.exists("%s/plugins/%s/config.txt" % (minecraft_dir, name)):
         p = {}
@@ -482,7 +482,7 @@ def disable_plugin(name):
         print "plugin not enabled"
         return False
     # Check that plugin 
-    shutil.move("%s/plugins/%s.jar"	% (minecraft_dir, name), "%s/plugins_disabled/" % (minecraft_dir, ))
+    shutil.move("%s/plugins/%s.jar" % (minecraft_dir, name), "%s/plugins_disabled/" % (minecraft_dir, ))
     if os.path.exists("%s/plugins/%s/" % (minecraft_dir, name)):
         shutil.move("%s/plugins/%s/" % (minecraft_dir, name), "%s/plugins_disabled/" % (minecraft_dir, ))
     return True
@@ -614,7 +614,7 @@ def get_players():
             break
         else:
             cnt += 1
-            print line	
+            print line  
             continue
         # Remove commas from players
         for player in players:
@@ -630,9 +630,9 @@ def _santize_log_line(line):
     
 # Get a number of lines from the log in reverse order (-1 for all).
 # Filter
-def get_logs(num_lines=-1, filter=None):
-    if filter not in ('chat', 'players', None):
-        #print "Invalid filter."
+def get_logs(num_lines=-1, chat_filter=None):
+    if chat_filter not in ('chat', 'players', None):
+        #print "Invalid chat_filter."
         return None
         
     logfile = "%s/server.log" % minecraft_dir
@@ -643,15 +643,15 @@ def get_logs(num_lines=-1, filter=None):
     cnt = 0
     ret_list = []
     for line in reversed(open(logfile).readlines()):
-        if filter == 'chat' and "<" in line and ">" in line and "[INFO]" in line:
+        if chat_filter == 'chat' and "<" in line and ">" in line and "[INFO]" in line:
             l = _santize_log_line(line).split()
             ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
             cnt += 1
-        elif filter == 'chat' and "[Server]" in line:
+        elif chat_filter == 'chat' and "[Server]" in line:
             l = _santize_log_line(line).split()
             ret_list.append(("chat", l[0], l[1] , l[3], " ".join(l[4:])))
             cnt += 1
-        elif filter == 'players':
+        elif chat_filter == 'players':
             if "logged in" in line or "logged out" in line or "lost connection" in line:
                 l = _santize_log_line(line).split()
                 if "logged in" in line:
@@ -660,7 +660,7 @@ def get_logs(num_lines=-1, filter=None):
                     action = "logged out"
                 ret_list.append(("players", l[0], l[1], l[3], action))
                 cnt += 1
-        elif filter == None:
+        elif chat_filter == None:
             ret_list.append(("none", _santize_log_line(line)))
             cnt += 1
         if num_lines > 0:
