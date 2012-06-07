@@ -630,9 +630,10 @@ def _santize_log_line(line):
     
 # Get a number of lines from the log in reverse order (-1 for all).
 # Filter
-def get_logs(num_lines=-1, chat_filter=None):
-    if chat_filter not in ('chat', 'players', None):
-        #print "Invalid chat_filter."
+
+def get_logs(num_lines=-1, log_filter=None):
+    if log_filter not in ('chat', 'players', None):
+        #print "Invalid filter."
         return None
         
     logfile = "%s/server.log" % minecraft_dir

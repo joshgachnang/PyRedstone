@@ -1,17 +1,7 @@
 import cherrypy
-#from simplejson import JSONEncoder
 import pyredstone
 import json
 import ast
-# JSON portion from http://tools.cherrypy.org/wiki/JSON. Add @cherrypy.tools.jsonify() to any function returning JSON.
-#encoder = JSONEncoder()
-
-#def jsonify_tool_callback(*args, **kwargs):
-    #response = cherrypy.response
-    #response.headers["Content-Type"] = "application/json"
-    #response.body = encoder.iterencode(response.body)
-
-#cherrypy.tools.jsonify = cherrypy.Tool("before_finalize", jsonify_tool_callback, priority=30)
 
 prohibited_actions = ["_call"]
 

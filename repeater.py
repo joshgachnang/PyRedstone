@@ -27,7 +27,9 @@ class Repeater():
         self.server_url = server_url
         self.username = username
 
-    def get(self, action, args):
+    def get(self, action, args=None):
+        if args is None:
+            args = {}
         jdata = json.dumps({"action": action, "username": self.username, "auth_token": "", "args": args})
         response = send_request(jdata)
         print response
