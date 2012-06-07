@@ -30,6 +30,7 @@ class Repeater():
     def get(self, action, args):
         jdata = json.dumps({"action": action, "username": self.username, "auth_token": "", "args": args})
         response = send_request(jdata)
+        print response
         if "result" in response:
             return response["result"]
         else:
@@ -48,10 +49,12 @@ class Repeater():
         return j
 
     def batch(self, get_list):
-        """ Takes a list of tuples as get_list. The tuples should be of the form ("command", {arglist}) """
+        """ Takes a list of tuples as get_list. The tuples should be of the form ("command", {arglist}) 
+        The JSON will look like: {"username": username, "auth_token": auth_token, "command": {"command", {arglist}}}
+        """
         jdada = {}
         for item in get_list:
-            jdata[action] = json.dumps({"action": item[0], "args": item[1]})
+            jdata["action_list"][action] = json.dumps({"action": item[0], "args": item[1]})
         jdata["username"] = self.username
         jdata["auth_token"] = self.auth_token
         response = send_request(jdata, "batch")
