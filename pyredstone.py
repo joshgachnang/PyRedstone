@@ -5,7 +5,6 @@ import sys
 import os
 import shutil
 import urllib2
-
 import socket 
 import collections
 

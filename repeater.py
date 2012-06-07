@@ -26,12 +26,13 @@ class Repeater():
         self.headers['Content-Type'] = 'application/json'
         self.server_url = server_url
         self.username = username
+        self.auth_token = ""
 
     def get(self, action, args=None):
         if args is None:
             args = {}
-        jdata = json.dumps({"action": action, "username": self.username, "auth_token": "", "args": args})
-        response = send_request(jdata)
+        jdata = json.dumps({"action": action, "username": self.username, "auth_token": self.auth_token, "args": args})
+        response = self.send_request(jdata)
         print response
         if "result" in response:
             return response["result"]
@@ -42,7 +43,7 @@ class Repeater():
                 raise RepeaterInvalidReponse("Invalid response received from the server")
                 
 
-    def send_request(jdata, url="get"):
+    def send_request(self, jdata, url=""):
         """ Given a JSON dict, send it to the server """
         url = urlparse.urljoin(self.server_url, url)
         req = urllib2.Request(url, jdata, self.headers)
@@ -54,12 +55,19 @@ class Repeater():
         """ Takes a list of tuples as get_list. The tuples should be of the form ("command", {arglist}) 
         The JSON will look like: {"username": username, "auth_token": auth_token, "command": {"command", {arglist}}}
         """
-        jdada = {}
-        for item in get_list:
-            jdata["action_list"][action] = json.dumps({"action": item[0], "args": item[1]})
+        print "starting batch"
+        jdata = {}
         jdata["username"] = self.username
         jdata["auth_token"] = self.auth_token
-        response = send_request(jdata, "batch")
+        jdata["action_list"] = {}
+        
+        for item in get_list:
+            action = item[0]
+            args = item[1]
+            jdata["action_list"][action] = json.dumps({"action": action, "args": args})
+        
+        print "Jdata is ", str(jdata)
+        response = self.send_request(str(jdata), "batch")
         if response is None:
             raise RepeaterEmptyResponse("Empty response received from the server")
         else:
