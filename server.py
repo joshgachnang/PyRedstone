@@ -27,6 +27,8 @@ class Root:
                 raise cherrypy.HTTPError(400, "Requests require an action.")
             if "args" not in data_in:
                 args = None
+            elif "args" == {}:
+                args = None
             else:
                 args = data_in["args"]
             # Ensure action isn"t in the prohibited list of actions, such as _call, which present a security risk.
@@ -36,7 +38,10 @@ class Root:
             # Try to get the function from pyredstone module. Then pass the arg list.
             try:
                 methodToCall = getattr(pyredstone, data_in["action"])
-                result = methodToCall(**args)
+                if args is None:
+                    result = methodToCall()
+                else:
+                    result = methodToCall(**args)
             except AttributeError as e:
                 print "Action %s not found." % data_in["action"]
                 raise cherrypy.HTTPError(404, "Action not found.")
@@ -80,6 +85,8 @@ class Root:
                 action = items[1]["action"]
                 if "args" not in items[1]:
                     args = None
+                elif "args" == {}:
+                    args = None
                 else:
                     args = items[1]["args"]
                 if action in prohibited_actions:
@@ -88,7 +95,10 @@ class Root:
                 # Try to get the function from pyredstone module. Then pass the arg list.
                 try:
                     methodToCall = getattr(pyredstone, action)
-                    result = methodToCall(**args)
+                    if args is None:
+                        result = methodToCall()
+                    else:
+                        result = methodToCall(**args)
                 except AttributeError as e:
                     print "Action %s not found." % action
                     raise cherrypy.HTTPError(404, "Action %s not found." % action)
