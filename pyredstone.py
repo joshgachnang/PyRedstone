@@ -630,7 +630,7 @@ def _santize_log_line(line):
     
 # Get a number of lines from the log in reverse order (-1 for all).
 # Filter
-def get_logs(num_lines=-1, filter=None):
+def get_logs(num_lines=-1, log_filter=None):
     if filter not in ('chat', 'players', None):
         #print "Invalid filter."
         return None
