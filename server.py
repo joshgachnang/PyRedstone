@@ -59,7 +59,7 @@ class Root:
         """ Responds with JSON of the form {"action": "result", "other_action": "other_result"} """
         response = {}
         if hasattr(cherrypy.request, "json"):
-            print "json", str(cherrypy.request.json), type(cherrypy.request.json), ast.literal_eval(str(cherrypy.request.json))
+            #print "json", str(cherrypy.request.json), type(cherrypy.request.json), ast.literal_eval(str(cherrypy.request.json))
             data_in = ast.literal_eval(str(cherrypy.request.json))
             if "username" not in data_in or "auth_token" not in data_in:
                 print "Username and/or auth_token not provided."
@@ -82,7 +82,7 @@ class Root:
                     args = None
                 else:
                     args = items[1]["args"]
-                if action[ in prohibited_actions:
+                if action in prohibited_actions:
                     print "Action %s prohibited" % action
                     raise cherrypy.HTTPError(405, "Action %s prohibited" % action)
                 # Try to get the function from pyredstone module. Then pass the arg list.
@@ -90,8 +90,8 @@ class Root:
                     methodToCall = getattr(pyredstone, action)
                     result = methodToCall(**args)
                 except AttributeError as e:
-                    print "Action %s not found." % action[action]["action"]
-                    raise cherrypy.HTTPError(404, "Action %s not found." % action[action]["action"])
+                    print "Action %s not found." % action
+                    raise cherrypy.HTTPError(404, "Action %s not found." % action)
                 
                 response[action["action"]] = result
             print response
