@@ -63,13 +63,17 @@ def status():
         out = subprocess.check_output('ps aux | grep  tmux | grep "%s"' % session_name, shell=True)
         pids = out.split('\n')
         for pid in pids:
+            if len(pid.split()) < 2:
+#                print "invalid pid? %s" % pid.split()
+                continue
             if os.path.exists('/proc/%s' % pid.split()[1]):
                 return True
-            
+
         return False
     except subprocess.CalledProcessError, e:
         #print e.returncode
         return False
+
         
 def server_restart(quick=False):
     """ Restarts the server, optionally giving warning messages.
