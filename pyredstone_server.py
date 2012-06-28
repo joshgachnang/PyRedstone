@@ -4,6 +4,44 @@ import pyredstone
 import json
 import ast
 from cherrypy.process.plugins import Daemonizer, PIDFile
+import logging
+from logging.config import dictConfig as dictconfig
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s %(message)s'
+        },
+    },
+    'handlers': {
+
+        'file_log': {                 # define and name a second handler
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler', # set the logging class to log to a file
+            'formatter': 'verbose',         # define the formatter to associate
+            'filename': '/var/log/pyredstone_server.log'  # log file
+        },
+        'console':{
+            'level':'DEBUG',
+            'class':'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+    },
+    'loggers': {
+        'logger': {               # define another logger
+            'handlers': ['file_log', 'console'],  # associate a different handler
+            'level': 'DEBUG',                 # specify the logging level
+            'propagate': True,
+        },
+    }
+}
+
+dictconfig(LOGGING)
+
 
 prohibited_actions = ["_call"]
 
@@ -16,16 +54,16 @@ class Root:
         {"action": "$action_name", "username": "$username", "auth_token": "$auth_token", "args": {"arg1": "arg1"...}, }
         """
         if hasattr(cherrypy.request, "json"):
-            print "json", str(cherrypy.request.json), type(cherrypy.request.json), ast.literal_eval(str(cherrypy.request.json))
+            logging.error("json", str(cherrypy.request.json), type(cherrypy.request.json), ast.literal_eval(str(cherrypy.request.json)))
             data_in = ast.literal_eval(str(cherrypy.request.json))
             if "username" not in data_in or "auth_token" not in data_in:
-                print "Username and/or auth_token not provided."
+                logging.error("Username and/or auth_token not provided.")
                 raise cherrypy.HTTPError(403, "Username and/or auth_token not provided.")
             if not self.client_authenticate(data_in["username"], data_in["auth_token"]):
-                print "Username and/or auth_token incorrect."
+                logging.error("Username and/or auth_token incorrect.")
                 raise cherrypy.HTTPError(403, "Username and/or auth_token incorrect.")
             if "action" not in data_in:
-                print "Requests require an action."
+                logging.error("Requests require an action.")
                 raise cherrypy.HTTPError(400, "Requests require an action.")
             if "args" not in data_in:
                 args = None
@@ -35,7 +73,7 @@ class Root:
                 args = data_in["args"]
             # Ensure action isn"t in the prohibited list of actions, such as _call, which present a security risk.
             if data_in["action"] in prohibited_actions:
-                print "Action %s prohibited" % data_in["action"]
+                logging.error("Action %s prohibited" % data_in["action"])
                 raise cherrypy.HTTPError(405, "Action %s prohibited" % data_in["action"])
             # Try to get the function from pyredstone module. Then pass the arg list.
             try:
@@ -45,10 +83,10 @@ class Root:
                 else:
                     result = methodToCall(**args)
             except AttributeError as e:
-                print "Action %s not found." % data_in["action"]
+                logging.error("Action %s not found." % data_in["action"])
                 raise cherrypy.HTTPError(404, "Action not found.")
             
-            print data_in
+            logging.debug(data_in)
             return {"result": result}
         else:
             if pyredstone.status:
@@ -66,23 +104,23 @@ class Root:
         """ Responds with JSON of the form {"action": "result", "other_action": "other_result"} """
         response = {}
         if hasattr(cherrypy.request, "json"):
-            #print "json", str(cherrypy.request.json), type(cherrypy.request.json), ast.literal_eval(str(cherrypy.request.json))
+            #logging.error("json", str(cherrypy.request.json), type(cherrypy.request.json), ast.literal_eval(str(cherrypy.request.json)))
             data_in = ast.literal_eval(str(cherrypy.request.json))
             if "username" not in data_in or "auth_token" not in data_in:
-                print "Username and/or auth_token not provided."
+                logging.error("Username and/or auth_token not provided.")
                 raise cherrypy.HTTPError(403, "Username and/or auth_token not provided.")
             if not self.client_authenticate(data_in["username"], data_in["auth_token"]):
-                print "Username and/or auth_token incorrect."
+                logging.error("Username and/or auth_token incorrect.")
                 raise cherrypy.HTTPError(403, "Username and/or auth_token incorrect.")
             if "action_list" not in data_in:
-                print "Batch requests require an action_list."
+                logging.error("Batch requests require an action_list.")
                 raise cherrypy.HTTPError(400, "Batch requests require an action_list.")
             # Process each action in action_list
             for items in data_in["action_list"].items():
-                #print action, action[action]
+                #logging.error(action, action[action])
                 # Check that each action has a command and optional arg list
                 if "action" not in items[1]:
-                    print "Each item in action_list needs an action."
+                    logging.error("Each item in action_list needs an action.")
                     raise cherrypy.HTTPError(400, "Each item in action_list needs an action.")
                 action = items[1]["action"]
                 if "args" not in items[1]:
@@ -92,7 +130,7 @@ class Root:
                 else:
                     args = items[1]["args"]
                 if action in prohibited_actions:
-                    print "Action %s prohibited" % action
+                    logging.error("Action %s prohibited" % action)
                     raise cherrypy.HTTPError(405, "Action %s prohibited" % action)
                 # Try to get the function from pyredstone module. Then pass the arg list.
                 try:
@@ -102,11 +140,11 @@ class Root:
                     else:
                         result = methodToCall(**args)
                 except AttributeError as e:
-                    print "Action %s not found." % action
+                    logging.error("Action %s not found." % action)
                     raise cherrypy.HTTPError(404, "Action %s not found." % action)
                 
                 response[action] = result
-            print response
+            logging.debug(response)
             return response
         else:
             if pyredstone.status:
