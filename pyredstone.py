@@ -98,21 +98,21 @@ def server_stop(quick=False):
         #print "Server isn't running"
         return False
     if not quick:
-        cmd = console_cmd("say Server going down in 1 minute")
-        if _call(cmd) == False:
+        result = console_cmd("say Server going down in 1 minute")
+        if result == False:
             return False
         time.sleep(30)
         cmd = console_cmd("say Server going down in 30 seconds")
-        if _call(cmd) == False:
+        if result == False:
             return False
         time.sleep(15)
         cmd = console_cmd("say Server going down in 15 seconds")
-        if _call(cmd) == False:
+        if result == False:
             return False
         time.sleep(15)
         
     cmd = console_cmd("say Server going down NOW! See you in 1 minute!")
-    if _call(cmd) == False:
+    if result == False:
         return False
     time.sleep(5)
     return console_cmd("stop")
