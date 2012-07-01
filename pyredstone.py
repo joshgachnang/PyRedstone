@@ -679,7 +679,7 @@ def whisper(player, message):
     return console_cmd("tell %s %s" % (player, message))
 
 def is_op(player):
-    return player in get_ops
+    return player in get_ops()
 
 def get_ops():
     ops = []
@@ -758,7 +758,7 @@ def _santize_log_line(line):
 # Get a number of lines from the log in reverse order (-1 for all).
 # Filter
 
-def get_logs(num_lines=-1, log_filter=None):
+def get_logs(num_lines=-1, log_filter=None, chat_filter=None):
     if log_filter not in ('chat', 'players', None):
         #print "Invalid filter."
         return None

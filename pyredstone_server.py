@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 import cherrypy
 import pyredstone
@@ -53,8 +54,10 @@ class Root:
         """ Expects a JSON dict to be in cherrypy.request.json. Expected syntax of the JSON:
         {"action": "$action_name", "username": "$username", "auth_token": "$auth_token", "args": {"arg1": "arg1"...}, }
         """
+        logger = logging.getLogger('logger')
+        print 'index'
         if hasattr(cherrypy.request, "json"):
-            logger.error("json", str(cherrypy.request.json), type(cherrypy.request.json), ast.literal_eval(str(cherrypy.request.json)))
+            #logger.error("json", str(cherrypy.request.json), type(cherrypy.request.json), ast.literal_eval(str(cherrypy.request.json)))
             data_in = ast.literal_eval(str(cherrypy.request.json))
             if "username" not in data_in or "auth_token" not in data_in:
                 logger.error("Username and/or auth_token not provided.")
@@ -94,7 +97,7 @@ class Root:
                 return "Server is running."
             else:
                 return "Server is not running."
-    
+            logger.debug("Plain GET request finished.")    
     
     def client_authenticate(self, username, auth_token):
         return True
@@ -148,6 +151,7 @@ class Root:
             logger.debug(response)
             return response
         else:
+            print 'status'
             if pyredstone.status:
                 return "Server is running."
             else:
@@ -160,10 +164,11 @@ if __name__ == "__main__":
 	logger.info("Starting server on 0.0.0.0:7777")
 
 	# daemonize
-	d = Daemonizer(cherrypy.engine)
-	d.subscribe()
-	PIDFile(cherrypy.engine, '/var/run/pyredstone/server.pid').subscribe()
+#	d = Daemonizer(cherrypy.engine)
+#	d.subscribe()
+#	PIDFile(cherrypy.engine, '/var/run/pyredstone/server.pid').subscribe()
 	cherrypy.config.update({"server.socket_host": "0.0.0.0",
         	                "server.socket_port": 7777,
                 	       })
 	cherrypy.quickstart(Root())
+	print 'fuck'
