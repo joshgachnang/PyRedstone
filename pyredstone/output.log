@@ -1,0 +1,4 @@
+ERROR 2012-07-09 21:05:17,494 <stdin> 12846 140732535596800 test
+DEBUG 2012-07-09 22:51:32,277 configurator ['Test']
+WARNING 2012-07-09 22:51:32,278 configurator More than one server found, no server specified. Using first server.
+DEBUG 2012-07-09 22:52:11,705 configurator ['Test']
