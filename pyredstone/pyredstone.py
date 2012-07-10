@@ -21,7 +21,7 @@ _version = '0.0.2'
 # Get server config
 config = configurator.get_config()
 session_name = 'troydoesntknow'
-minecraft_dir = '/home/josh/minecraft'
+self.minecraft_dir = '/home/josh/minecraft'
 bukkit = True
 if bukkit:
     server_jar = 'craftbukkit.jar'
@@ -77,7 +77,7 @@ class RedstoneServer:
         # Set variables that might not get set to defaults
         self.backup_dir = '/tmp'
         self.mapper = 'overviewer'
-        # Load config file and 
+        # Load config file and
         if os.path.exists(config_file):
             config = configurator.get_config(config_file)
             self.minecraft_dir = config['minecraft_dir']
@@ -101,7 +101,6 @@ class RedstoneServer:
         # Write the config back to the config file
         configurator.write_config(config_file, config)
 
-
     def _call(self, cmd):
         """ Shell call convenience function.
         cmd: A command line string, exactly as would be executed on a shell.
@@ -118,7 +117,7 @@ class RedstoneServer:
     def console_cmd(self, msg):
         """ Sends a message to the server console. """
         cmd = 'tmux send -t %s "%s" "enter"' % (session_name, msg)
-        return self._call(cmd)
+        self._call(cmd)
 
     #TODO actually implement Twitter
     def twitter_say(self, message):
@@ -187,7 +186,7 @@ class RedstoneServer:
         if result == False:
             return False
         time.sleep(5)
-        return self.console_cmd("stop")
+        self.console_cmd("stop")
 
     def server_start(self):
         """ Starts the Minecraft server.
@@ -198,7 +197,7 @@ class RedstoneServer:
         if self.status():
             #print "Server already running in tmux session %s" % session_name
             return False
-        cmd = 'tmux new -d -s %s "cd %s; java -Xms1524M -Xmx1524M -jar %s nogui"' % (session_name, minecraft_dir, server_jar)
+        cmd = 'tmux new -d -s %s "cd %s; java -Xms1524M -Xmx1524M -jar %s nogui"' % (session_name, self.minecraft_dir, server_jar)
         self._call(cmd)
         time.sleep(5)
         #print "Minecraft started in tmux session %s" % session_name
@@ -212,7 +211,7 @@ class RedstoneServer:
         if self.console_cmd("save-all") == False:
             return False
         time.sleep(1)
-        return self.console_cmd("save-off")
+        self.console_cmd("save-off")
 
     def after_save(self):
         """ Reenables saving to disk. Useful after backing up the server.
@@ -230,7 +229,7 @@ class RedstoneServer:
         if message == None or message == "":
             #print "No message!"
             return False
-        return self.console_cmd("say %s" % (message))
+        self.console_cmd("say %s" % (message))
 
     def server_quick_stop(self):
         """ Convenience function for quick stopping server. """
@@ -268,15 +267,15 @@ class RedstoneServer:
         """
         #TODO Support CraftBukkit, CraftBukkit++ and other servers.
         u = urllib2.urlopen('http://minecraft.net/download/minecraft_server.jar')
-        f = open('%s/test_update' % minecraft_dir, 'w')
+        f = open('%s/test_update' % self.minecraft_dir, 'w')
         f.write(u.read())
         f.close()
-        testfile = file('%s/test_update' % minecraft_dir, 'rb')
-        currentfile = file('%s/minecraft_server.jar' % minecraft_dir, 'rb')
+        testfile = file('%s/test_update' % self.minecraft_dir, 'rb')
+        currentfile = file('%s/minecraft_server.jar' % self.minecraft_dir, 'rb')
 
         if not zlib.adler32(testfile) == zlib.adler(currentfile):
             server_stop()
-            shutil.move('%s/test_update' % minecraft_dir, '%s/minecraft_server' % minecraft_dir)
+            shutil.move('%s/test_update' % self.minecraft_dir, '%s/minecraft_server' % self.minecraft_dir)
             server_start()
             return self.status()
         return True
@@ -288,7 +287,7 @@ class RedstoneServer:
         Returns True if player is banned, False otherwise.
         """
         if player_type == None:
-            if _is_ip(player_or_ip):
+            if self._is_ip(player_or_ip):
                 player_type = 'ip'
             else:
                 player_type = 'player'
@@ -296,7 +295,7 @@ class RedstoneServer:
             f = 'banned-ips.txt'
         else:
             f = 'banned-players.txt'
-        with open("%s/%s" % (minecraft_dir, f), 'r') as users:
+        with open("%s/%s" % (self.minecraft_dir, f), 'r') as users:
             for user in users:
                 if user[:-1] == player_or_ip:
                     # IP already banned
@@ -323,7 +322,7 @@ class RedstoneServer:
             print "Player must be either 'player', 'ip', or None"
             return None
         if player_type == 'player' or player_type == None:
-            with open("%s/%s" % (minecraft_dir, 'banned-players.txt'), 'r') as users:
+            with open("%s/%s" % (self.minecraft_dir, 'banned-players.txt'), 'r') as users:
                 for user in users:
                     if user == '\n' or user == "None\n":
                         continue
@@ -332,7 +331,7 @@ class RedstoneServer:
                     else:
                         user_list.append(user)
         if player_type == 'ip' or player_type == None:
-            with open("%s/%s" % (minecraft_dir, 'banned-ips.txt'), 'r') as users:
+            with open("%s/%s" % (self.minecraft_dir, 'banned-ips.txt'), 'r') as users:
                 for user in users:
                     if '\n' in user:
                         user_list.append(user[:-1])
@@ -343,7 +342,7 @@ class RedstoneServer:
     def get_whitelist(self):
         """ Returns a list of whitelisted users or None if there are none. """
         user_list = []
-        with open("%s/%s" % (minecraft_dir, 'white-list.txt'), 'r') as users:
+        with open("%s/%s" % (self.minecraft_dir, 'white-list.txt'), 'r') as users:
             for user in users:
                 if '\n' in user:
                     user_list.append(user[:-1])
@@ -358,16 +357,16 @@ class RedstoneServer:
         or banning fails, True otherwise.
         """
         # Check if IP or player:
-        if _is_ip(player_or_ip):
+        if self._is_ip(player_or_ip):
             # IP!
             if is_banned(player_or_ip, 'ip'):
                 return False
-            return self.console_cmd("ban-ip %s" % (player_or_ip))
+            self.console_cmd("ban-ip %s" % (player_or_ip))
         else:
             # Must be a player..or invalid IP
             if is_banned(player_or_ip, 'player'):
                 return False
-            return self.console_cmd("ban %s" % (player_or_ip))
+            self.console_cmd("ban %s" % (player_or_ip))
 
     def pardon(self, player_or_ip):
         """ Removes the ban on a player or IP. Attempts to determine if the arg is
@@ -375,35 +374,31 @@ class RedstoneServer:
         command fails, True otherwise.
         """
         # Check if IP or player:
-        if _is_ip(player_or_ip):
+        if self._is_ip(player_or_ip):
             if not is_banned(player_or_ip, 'ip'):
                 return False
-            return self.console_cmd("pardon-ip %s" % (player_or_ip))
+            self.console_cmd("pardon-ip %s" % (player_or_ip))
         else:
             if not is_banned(player_or_ip, 'player'):
                 return False
-            return self.console_cmd("pardon %s" % (player_or_ip))
+            self.console_cmd("pardon %s" % (player_or_ip))
 
     def op(self, player):
-        """ Sets a player to Op. Returns False if player is already an Op or
-        server command fails.
+        """ Sets a player to Op. Raises MinecraftCommandException if server
+        command fails. Fails silently if player is already op.
         """
-        if is_op(player):
-            return False
-        with open("%s/ops.txt" % (minecraft_dir), 'r') as users:
+        with open("%s/ops.txt" % (self.minecraft_dir), 'r') as users:
             for user in users:
                 if user == player:
                     # IP already banned
-                    return None
+                    return
         self.console_cmd("op %s" % (player))
 
     def deop(self, player):
-        """ Removes a player from Op self.status. Returns False if player is not
-        already an Op or server command fails. True otherwise.
-
+        """ Removes a player from Op self.status. Raises MinecraftCommandException
+        if server command fails.
         """
-        if not is_op(player):
-            return False
+
         self.console_cmd("deop %s" % (player))
 
     def add_to_whitelist(self, player):
@@ -413,7 +408,7 @@ class RedstoneServer:
         """
         if player not in get_whitelist():
             self.console_cmd("whitelist add %s" % (player))
-            _whitelist_reload()
+            self._whitelist_reload()
 
     def remove_from_whitelist(self, player):
         """ Removes a player from the whitelist. Fails silently if player is
@@ -421,26 +416,26 @@ class RedstoneServer:
         fails.
         """
         self.console_cmd("whitelist remove %s" % (player))
-        _whitelist_reload()
+        self._whitelist_reload()
 
     #TODO possible solution for ordering of YAML:
     # http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
     def parse_settings(self, filename):
         """ Parses filename into a dict. Filename should be the relative path to
-        the settings file from minecraft_dir. Settings file can be a YAML
+        the settings file from self.minecraft_dir. Settings file can be a YAML
         file, key=value list, or a standard config file. Returns a dict if parsing
         is successful. Raises a MinecraftException otherwise.
         """
-        # Get full filename and path. Accepts full path, file in minecraft_dir
-        # or config.yml/config,txt file in plugin directory in minecraft_dir
+        # Get full filename and path. Accepts full path, file in self.minecraft_dir
+        # or config.yml/config,txt file in plugin directory in self.minecraft_dir
         if not os.path.exists(filename):
-            if os.path.exists('%s/%s' % (minecraft_dir, filename)):
-                filename = '%s/%s' % (minecraft_dir, filename)
-            elif os.path.exists('%s/plugins/%s/config.yml' % (minecraft_dir, filename)):
-                filename = '%s/plugins/%s/config.yml' % (minecraft_dir, filename)
+            if os.path.exists('%s/%s' % (self.minecraft_dir, filename)):
+                filename = '%s/%s' % (self.minecraft_dir, filename)
+            elif os.path.exists('%s/plugins/%s/config.yml' % (self.minecraft_dir, filename)):
+                filename = '%s/plugins/%s/config.yml' % (self.minecraft_dir, filename)
 
-            elif os.path.exists('%s/plugins/%s/config.txt' % (minecraft_dir, filename)):
-                filename = '%s/plugins/%s/config.txt' % (minecraft_dir, filename)
+            elif os.path.exists('%s/plugins/%s/config.txt' % (self.minecraft_dir, filename)):
+                filename = '%s/plugins/%s/config.txt' % (self.minecraft_dir, filename)
             else:
                 # Filename doesn't exist or plugin directory/ doesn't exist
                 raise MinecraftException("Filename %s does not exist." % (filename,))
@@ -509,7 +504,7 @@ class RedstoneServer:
         """
         #p = {}
         p = collections.OrderedDict()
-        with open("%s/%s" % (minecraft_dir, filename)) as props:
+        with open("%s/%s" % (self.minecraft_dir, filename)) as props:
             for line in props:
                 s = line.split('=')
                 if len(s) == 2:
@@ -524,7 +519,7 @@ class RedstoneServer:
     def write_minecraft_settings(self, props, filename='server.properties'):
         """ Writes out a minecraft settings/config file. Can be used for the
         main config file or for plugin files. Takes a dict as props and
-        a filename relative to minecraft_dir.
+        a filename relative to self.minecraft_dir.
 
         Raises IOError if the file cannot be written
         Raises SyntaxError if the given dict cannot be coerced into the settings
@@ -535,7 +530,7 @@ class RedstoneServer:
         original_props = self.parse_minecraft_settings()
         print original_props
         try:
-            with open("%s/%s" % (minecraft_dir, filename), 'w') as f:
+            with open("%s/%s" % (self.minecraft_dir, filename), 'w') as f:
                 for key in original_props:
                     print type(original_props), key
                     if key in props:
@@ -563,48 +558,68 @@ class RedstoneServer:
         return True
 
     def get_plugin_config(self, name):
+        """ Given a plugin, tries to find its main config file.
+        Raises IOError if the config file cannot be opened.
+        Raises SyntaxError if the config file cannot be found.
+        """
         # Check for yaml config file
-        if os.path.exists("%s/plugins/%s/config.yml" % (minecraft_dir, name)):
+        if os.path.exists("%s/plugins/%s/config.yml" % (self.minecraft_dir, name)):
             try:
                 import yaml
             except ImportError:
                 print "Couldn't import module 'yaml'"
-            return yaml.load(open('%s/plugins/%s/config.yml' % (minecraft_dir, name)))    # Check for text config file
-        elif os.path.exists("%s/plugins/%s/config.txt" % (minecraft_dir, name)):
+            return yaml.load(open('%s/plugins/%s/config.yml' % (self.minecraft_dir, name)))    # Check for text config file
+        elif os.path.exists("%s/plugins/%s/config.txt" % (self.minecraft_dir, name)):
             p = {}
-            with open("%s/plugins/%s/config.txt" % (minecraft_dir, name)) as props:
-                for line in props:
-                    s = line.split('=')
-                    if len(s) == 2:
-                        p[s[0]] = s[1]
-                    elif len(s) == 1:
-                        p[s[0]] = None
-                    else:
-                        return None
-            return p
-
+            try:
+                with open("%s/plugins/%s/config.txt" % (self.minecraft_dir, name)) as props:
+                    for line in props:
+                        s = line.split('=')
+                        if len(s) == 2:
+                            p[s[0]] = s[1]
+                        elif len(s) == 1:
+                            p[s[0]] = None
+                        else:
+                            return None
+                return p
+            except IOError as e:
+                logger.exception("Couldn't open config.txt for plugin %s" % (plugin,))
+                raise IOError("Could not open config.txt for plugin %s" % (plugin,))
         # Can't really work on it...
         else:
             #print "can't work on this config file"
-            return None
+            raise SyntaxError("Could not find config file for plugin %s" % (plugin,))
 
-    # Returns a tuple of ints; (X, Y, Z)
+    ###
+    # In game status (NBT)
+    ###
+
     def get_spawn(self):
-        n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
+        """ Finds the spawn coordinates. Returns a 3tuple of ints in the format
+        (X, Y, Z) or None if the coordinates cannot be found.
+        """
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
         if n == None:
             return None
         else:
             return (n[0]["SpawnX"].value, n[0]["SpawnY"].value, n[0]["SpawnZ"].value)
 
     def get_seed(self):
-        n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
+        """ Finds the seed of the server. Returns the seed as a string, or
+        None if the seed cannot be found.
+        """
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
         if n == None:
             return None
         else:
             return n[0]["RandomSeed"].value
 
     def is_thundering(self):
-        n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
+        """ Checks if it is currently thundering in game. Returns True if
+        thundering, False if not thundering, and None if the thundering state
+        cannot be found.
+        """
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
         if n == None:
             return None
         else:
@@ -614,7 +629,11 @@ class RedstoneServer:
                 return True
 
     def is_raining(self):
-        n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
+        """ Checks if it is currently raining in game. Returns True if
+        raining, False if not raining, and None if the raining state
+        cannot be found.
+        """
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
         if n == None:
             return None
         else:
@@ -624,30 +643,41 @@ class RedstoneServer:
                 return True
 
     def get_time(self):
-        n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
+        """ Gets the current in game time. Returns the time as an int between
+        0 and 23999, or None if the time cannot be found.
+        """
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
         if n == None:
             return None
         else:
             return n[0]["Time"].value % 24000
 
     def get_day(self):
-        n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
+        """ Gets the current number of elapsed in game days. Returns the days
+        as an int, or None if the days cannot be found.
+        """
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
         if n == None:
             return None
         else:
             return n[0]["Time"].value / 24000
+    ###
+    #Plugins
+    ###
 
     def list_disabled_plugins(self):
+        """ Returns a list of disabled plugins. """
         plugin_list = []
-        for ob in os.listdir("%s/plugins_disabled" % minecraft_dir):
-            if not os.path.isdir("%s/plugins_disabled/%s" % (minecraft_dir, ob)) and ob[-4:] == '.jar':
+        for ob in os.listdir("%s/plugins_disabled" % self.minecraft_dir):
+            if not os.path.isdir("%s/plugins_disabled/%s" % (self.minecraft_dir, ob)) and ob[-4:] == '.jar':
                 plugin_list.append(ob[:-4])
         return plugin_list
 
     def list_plugins(self):
+        """ Returns a list of all enabled plugins. """
         plugin_list = []
-        for ob in os.listdir("%s/plugins" % minecraft_dir):
-            if not os.path.isdir("%s/plugins/%s" % (minecraft_dir, ob)) and ob[-4:] == '.jar':
+        for ob in os.listdir("%s/plugins" % self.minecraft_dir):
+            if not os.path.isdir("%s/plugins/%s" % (self.minecraft_dir, ob)) and ob[-4:] == '.jar':
                 plugin_list.append(ob[:-4])
         return plugin_list
 
@@ -673,13 +703,13 @@ class RedstoneServer:
         if config['server_jar'] == 'vanilla':
             raise NotBukkitException("Cannot disable plugins on vanilla Minecraft server.")
         # Check if plugin is enabled
-        if not os.path.exists("%s/plugins/%s.jar" % (minecraft_dir, name)):
+        if not os.path.exists("%s/plugins/%s.jar" % (self.minecraft_dir, name)):
             print "plugin not enabled"
             return False
         # Check that plugin
-        shutil.move("%s/plugins/%s.jar" % (minecraft_dir, name), "%s/plugins_disabled/" % (minecraft_dir,))
-        if os.path.exists("%s/plugins/%s/" % (minecraft_dir, name)):
-            shutil.move("%s/plugins/%s/" % (minecraft_dir, name), "%s/plugins_disabled/" % (minecraft_dir,))
+        shutil.move("%s/plugins/%s.jar" % (self.minecraft_dir, name), "%s/plugins_disabled/" % (self.minecraft_dir,))
+        if os.path.exists("%s/plugins/%s/" % (self.minecraft_dir, name)):
+            shutil.move("%s/plugins/%s/" % (self.minecraft_dir, name), "%s/plugins_disabled/" % (self.minecraft_dir,))
         if reload:
             try:
                 server_reload()
@@ -697,16 +727,16 @@ class RedstoneServer:
         # Check if plugin is already enabled
         if config['server_jar'] == 'vanilla':
             raise NotBukkitException("Cannot enable plugins on vanilla Minecraft server.")
-        if name + '.jar' in os.listdir("%s/plugins" % minecraft_dir):
+        if name + '.jar' in os.listdir("%s/plugins" % self.minecraft_dir):
                     print "plugin already enabled"
                     return False
         # Check if plugin exists in disabled
-        if not os.path.exists("%s/plugins_disabled/%s.jar" % (minecraft_dir, name)):
+        if not os.path.exists("%s/plugins_disabled/%s.jar" % (self.minecraft_dir, name)):
             print "plugin doesn't exist in disabled directory. Try downloading it first."
             return None
-        shutil.move("%s/plugins_disabled/%s.jar" % (minecraft_dir, name), "%s/plugins/" % (minecraft_dir,))
-        if os.path.exists("%s/plugins_disabled/%s/" % (minecraft_dir, name)):
-            shutil.move("%s/plugins_disabled/%s/" % (minecraft_dir, name), "%s/plugins/" % (minecraft_dir,))
+        shutil.move("%s/plugins_disabled/%s.jar" % (self.minecraft_dir, name), "%s/plugins/" % (self.minecraft_dir,))
+        if os.path.exists("%s/plugins_disabled/%s/" % (self.minecraft_dir, name)):
+            shutil.move("%s/plugins_disabled/%s/" % (self.minecraft_dir, name), "%s/plugins/" % (self.minecraft_dir,))
         if reload:
             try:
                 server_reload()
@@ -716,128 +746,158 @@ class RedstoneServer:
 
     def server_reload(self):
         """ Sends a reload command to the server. This reloads all plugin configs
-        and enables or disables plugins """
+        and enables or disables plugins.
+        """
         try:
             self.console_cmd("reload")
         except MinecraftException as e:
             raise MinecraftException("Reloading the server failed. Error %d" % e.errorcode)
 
-    def get_player_ip(self, player):
-        if os.path.exists("%s/server.log" % minecraft_dir):
-            for line in reversed(open("%s/server.log" % minecraft_dir).readlines()):
+    def get_player_ip(self, player, every_ip=False):
+        """ Gets the last IP a player connected with. If every_ip is True,
+        returns a list of IP's the player has connected with (in the current log)
+        """
+        ip_list = []
+        if os.path.exists("%s/server.log" % self.minecraft_dir):
+            for line in reversed(open("%s/server.log" % self.minecraft_dir).readlines()):
                 if "logged in with entity id" in line and session_name in line:
                     # avoid issue where user "josh"'s ip is used for user "joshua".
                     words = line.split()
                     if words[3] == player:
                         ip_line = words[4]
                         # Split at the : for the IP, leave off port, cut off first 2 characters = ip!
-                        return ip_line.split(':')[0][2:]
+                        if every_ip:
+                            ip_list.append(ip_line.split(':')[0][2:])
+                        else:
+                            return ip_line.split(':')[0][2:]
 
     def kick(self, player):
+        """ Kicks a player out of the game. Fails silently if the player is
+        not in the game.
+        """
         if player not in get_players():
-            print "Player %s not currently connected." % (player)
-            return False
+            logger.info("Tried to kick player %s, but player was not connected" % (player,))
         self.console_cmd("kick %s" % (player))
 
     def player_gamemode(self, player, gamemode):
-        if gamemode != 0 and gamemode != 1:
-            return False
-        self.console_cmd("gamemode %s %s" % (player, gamemode))
-        return True
+        """ Changes a player's gamemode. Accepts either 0 (survival), 1
+        (creative) for gamemode, or 2 (adventure) for gamemode. Fails silently
+        if the player is not connected.
+        """
+        if gamemode not in [0, 1, 2, 'creative', 'survival', 'adventure']:
+            logger.error("Tried setting player %s gamemode to unacceptabled gamemode %s." % (player, str(gamemode),))
+            raise MinecraftException("Tried setting player %s gamemode to unacceptabled gamemode %s." % (player, str(gamemode),))
+        self.console_cmd("gamemode %s %s" % (player, str(gamemode)))
+
+    def set_default_gamemode(self, gamemode):
+        """ Changes a player's gamemode. Accepts either 0 (survival), or 1
+        (creative) or 2 (adventure) for gamemode. Fails silently if the player
+        is not connected.
+        """
+        if gamemode not in [0, 1, 2, 'creative', 'survival', 'adventure']:
+            logger.error("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
+            raise MinecraftException("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
+        self.console_cmd("defaultgamemode %s" % (str(gamemode)))
 
     def teleport(self, player, target_player):
+        """ Teleports player to target_player.
+        Raises MinecraftException if either player is not connected.
+        """
         players = get_players()
         if player not in players:
-            print "Player %s not currently connected." % (player)
-            return False
+            logger.error("Tried to teleport player %s, who is not currently connected." % (player))
+            raise MinecraftException("Tried to teleport player %s, who is not currently connected." % (player))
         if target_player not in players:
-            print "Player %s not currently connected." % (target_player)
-            return False
+            logger.error("Tried to teleport other player to player %s, who is not currently connected." % (target_player))
+            raise MinecraftException("Tried to teleport other player to player %s, who is not currently connected." % (target_player))
         self.console_cmd("tp %s %s" % (player, target_player))
-        return True
 
     def give_xp(self, player, amount):
+        """ Gives amount (or removes if amount is negative) XP to player.
+        Fails silently if player is not connected.
+        Raises MinecraftException if amount is less than -5000 or more than 5000
+        """
         if player not in get_players():
-            print "Player %s not currently connected." % (player)
-            return False
-        if int(amount) > 5000 or int(amount) < 5000:
-            print "Amount must be between -5000 and 5000"
-            return False
+            logger.info("Tried to give XP to player %s, who is not currently connected." % (player))
+        if int(amount) > 5000 or int(amount) < -5000:
+            logger.error("XP give amount must be between -5000 and 5000, was %d" % (amount,))
+            raise MinecraftException("XP give amount must be between -5000 and 5000, was %d" % (amount,))
         self.console_cmd("xp %s %d" % (player, int(amount)))
 
     # Renew whitelist from disk. Call after adding or removing from whitelist.
     def _whitelist_reload(self):
-        return self.console_cmd("whitelist reload")
+        """ Reloads the whitelist so changes take affect.
+        """
+        self.console_cmd("whitelist reload")
 
     def whisper(self, player, message):
+        """ Sends a whisper to a player from the console. Fails silently if
+        player is not connected.
+        """
         if player not in get_players():
-            print "Player %s not currently connected." % (player)
-            return False
-        return self.console_cmd("tell %s %s" % (player, message))
+            logging.info("Tried to whisper to player %s, who is not currently connected." % (player))
+        self.console_cmd("tell %s %s" % (player, message))
 
     def is_op(self, player):
+        """ Returns True if player is listed as an Op, False otherwise. """
         return player in get_ops()
 
     def get_ops(self):
+        """ Returns a list of Ops, or None if ops file cannot be read. """
         ops = []
-        if os.path.exists("%s/ops.txt" % minecraft_dir):
-            with open("%s/ops.txt" % minecraft_dir) as f:
+        if os.path.exists():
+            with open("%s/ops.txt" % self.minecraft_dir) as f:
                 for user in f:
                     if user[-1] == '\n':
                         ops.append(user[:-1])
                     else:
                         ops.append(user)
             return ops
-        #print "No ops file"
-        return []
-
-    ## Returns True if weather toggled on, False if toggled off.
-    #def toggle_weather():
-        #cmd = self.console_cmd("toggledownfall" "enter"' % (session_name,)
-            #self._call(cmd)
-        ## Avoid race condition
-        #time.sleep(0.5)
-        #if os.path.exists("%s/server.log" % minecraft_dir):
-            #for line in reversed(open("%s/server.log" % minecraft_dir).readlines()):
-                #if "Toggling downfall off" in line and session_name in line:
-                        #print line
-                        #return False
-                #elif "Toggling downfall on" in line and session_name in line:
-                        #print line
-                        #return True
-        #return False
+        logging.warning("Could not find an ops file at %s/ops.txt" % self.minecraft_dir)
+        return None
 
     def start_weather(self):
+        """ Starts a downfall in the server. Fails silently if already
+        downfalling. """
         if is_raining():
-            return False
+            logger.warning("Tried to start weather, but already in the middle of a downfall.")
         else:
-            return self.console_cmd("toggledownfall")
+            self.console_cmd("toggledownfall")
 
     def stop_weather(self):
+        """ Stops a downfall in the server. Fails silently if already
+        stopped. """
         if not is_raining():
-            return False
+            logger.warning("Tried to stop weather, but downfall is already stopped.")
         else:
-            return self.console_cmd("toggledownfall")
+            self.console_cmd("toggledownfall")
 
     def set_time(self, time):
+        """ Changes the tie in the server to time. Time must be between 0
+        and 24000. 0 is dawn, 6000 is midday, 12000 is dusk, and 18000 is
+        midnight. Raises MinecraftException if time is not between 0 and
+        24000 (inclusive).
+        """
         if time < 0 or time > 24000:
             #print "Invalid time, must be between 0 and 24000."
-            return False
-        return self.console_cmd("time set %s" % (str(time)))
+            logger.error("Tried to set time to invalid time %d" % (time,))
+            raise MinecraftException("Tried to set time to invalid time %d" % (time,))
+        self.console_cmd("time set %s" % (str(time)))
 
     def get_players(self):
-        if self.console_cmd("list") == False:
-            return None
-        cnt = 0
+        """ Returns a list of players currently connected to the server.
+        """
+        self.console_cmd("list")
+        count = 0
         ret_list = []
-        for line in reversed(open("%s/server.log" % minecraft_dir).readlines()):
-            if "Connected players" in line and cnt < 20:
+        for line in reversed(open("%s/server.log" % self.minecraft_dir).readlines()):
+            if "Connected players" in line and count < 20:
                 #print "winning line: ", line[:-5]
                 players = line[:-4].split()[5:]
-            elif cnt >= 20:
+            elif count >= 20:
                 break
             else:
-                cnt += 1
+                count += 1
                 print line
                 continue
             # Remove commas from players
@@ -847,35 +907,41 @@ class RedstoneServer:
         return ret_list
 
     def _santize_log_line(self, line):
+        """ Internal function to get rid of the hex and other
+        random characters from logging files so they can be displayed
+        to users.
+        """
         line = line.replace('\x1b[0m', '')
         line = line.replace('\x1b[35m', '')
         line = line.replace('\n', '')
         return line
 
-    # Get a number of lines from the log in reverse order (-1 for all).
-    # Filter
-
     def get_logs(self, num_lines=-1, log_filter=None, chat_filter=None):
+        """ Get a number of lines from the log in reverse order (-1 for all).
+        log_filter can be chat, players, or None.
+        chat_filter will only return player chat.
+        TODO add advanced filtering.
+        """
         if log_filter not in ('chat', 'players', None):
             #print "Invalid filter."
             return None
 
-        logfile = "%s/server.log" % minecraft_dir
+        logfile = "%s/server.log" % self.minecraft_dir
         if not os.path.exists(logfile):
             #print "Log file doesn't exists"
             return None
 
-        cnt = 0
+        count = 0
         ret_list = []
         for line in reversed(open(logfile).readlines()):
             if chat_filter == 'chat' and "<" in line and ">" in line and "[INFO]" in line:
                 l = _santize_log_line(line).split()
                 ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
-                cnt += 1
+                count += 1
             elif chat_filter == 'chat' and "[Server]" in line:
                 l = _santize_log_line(line).split()
                 ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
-                cnt += 1
+                count += 1
             elif chat_filter == 'players':
                 if "logged in" in line or "logged out" in line or "lost connection" in line:
                     l = _santize_log_line(line).split()
@@ -884,63 +950,17 @@ class RedstoneServer:
                     elif "logged out" in line or "lost connection" in line:
                         action = "logged out"
                     ret_list.append(("players", l[0], l[1], l[3], action))
-                    cnt += 1
+                    count += 1
             elif chat_filter == None:
                 ret_list.append(("none", _santize_log_line(line)))
-                cnt += 1
+                count += 1
             if num_lines > 0:
-                #print cnt, num_lines, cnt < num_lines
-                if int(cnt) >= int(num_lines):
+                #print count, num_lines, count < num_lines
+                if int(count) >= int(num_lines):
                     #print 'a'
                     break
         return ret_list
 
-    def backup(self):
-        now = datetime.datetime.now()
-        if now.minute == 0:
-            print "Starting hourly save at hour %d" % now.hour
-            prepare_save()
-            backup_filename = "%s/%s-hourly-%d.tar.gz" % (backup_dir, session_name, now.hour,)
-            self._call('tar czvf %s %s %s %s' % (backup_filename, os.path.join(minecraft_dir, session_name), os.path.join(minecraft_dir, session_name + "_the_end"), os.path.join(minecraft_dir, session_name + "_nether")))
-            #print "World backed up!"
-            after_save()
-            offsite_backup(backup_filename)
-            #print "Offsite backup complete!"
-            #return True
-        else:
-            #print "Script must have been called manually. Making separate backup."
-            prepare_save()
-            backup_filename = "%s/%s-manual-%d.tar.gz" % (backup_dir, session_name, now.hour)
-            date_string = "%d-%d-%d_%d-%d" % (now.year, now.month, now.day, now.hour, now.minute)
-            self._call('tar czvf %s %s' % (backup_filename, os.path.join(minecraft_dir, session_name)))
-            #print "World backed up!"
-            after_save()
-            offsite_backup(backup_filename)
-            #print "Offsite backup complete!"
-            #return True
-        # Daily backup, will keep 31 copies, then start overwriting.
-        if now.hour == 0 and now.minute == 0:
-            hourly_backup = "%s/%s-hourly-%d.tar.gz" % (backup_dir, session_name, now.hour)
-            daily_backup = "%s/%s-daily-%d.tar.gz" % (backup_dir, session_name, now.day)
-            try:
-                shutil.copy(hourly_backup, daily_backup)
-            except Error, e:
-                #print e
-                return False
-        return True
-
-    # Assumes you already synced keys to scp_server and can login without a password
-    def offsite_backup(self, filename):
-        print filename
-        pass
-        if os.path.exists(filename):
-            return self._call('scp %s %s:%s' % (filename, scp_server, scp_server_target))
-        else:
-            #print "Backup file %s didn't exist for offsite backup." % filename
-            return False
-
-    def list_backups(self):
-        pass
 
 if __name__ == '__main__':
 
