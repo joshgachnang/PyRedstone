@@ -6,9 +6,14 @@ import sys
 import os
 import shutil
 import urllib2
-import socket 
+import socket
 import collections
+import logging.config
+import logconfig
 
+# Config with logging config file
+logging.config.dictConfig(logconfig.LOGGING)
+logger = logging.getLogger('pyredstone')
 _version = '0.0.2'
 session_name = 'troydoesntknow'
 minecraft_dir = '/home/josh/minecraft'
@@ -21,29 +26,47 @@ backup_dir = '/home/josh/minecraft_backup'
 scp_server = 'josh@thepronserver'
 scp_server_target = '/backup/minecraft'
 
+
 # Custom exceptions
+# Messages logged here will likely be shown in
 class MinecraftException(Exception):
-    pass
+    def __init__(self, msg, code):
+        self.msg = msg
+        self.code = code
+
+    def __str__(self):
+        return "%d: %s" % (self.code, self.msg)
+
+
 class MinecraftCommandException(MinecraftException):
     pass
 
+
+class NotBukkitException(MinecraftException):
+    def __init__(self, message):
+        super(NotBukkitException, self).__init__(message, 0)
+
+
 def _call(cmd):
-    """ Shell call convenience function. 
+    """ Shell call convenience function.
     cmd: A command line string, exactly as would be executed on a shell.
     Returns True for successful execution, False for non-zero command output.
-    
+
     """
     try:
         subprocess.check_output(cmd, shell=True)
     except subprocess.CalledProcessError as e:
         #print e.returncode, e.output
-        #TODO Logging!
+        #logger = logging.getLogger('pyredstone')
+        #logging.exception("Command call error")
         raise MinecraftCommandException("Command '%s' failed with exit code: %d" % (cmd, e.returncode))
-    
+
+
 def console_cmd(msg):
     """ Sends a message to the server console. """
     cmd = 'tmux send -t %s "%s" "enter"' % (session_name, msg)
-    return _call(cmd) 
+    return _call(cmd)
+
 
 #TODO actually implement Twitter
 def twitter_say(message):
@@ -51,11 +74,12 @@ def twitter_say(message):
         return False
     else:
         return True
-        
+
+
 def status():
     """ Checks whether the Minecraft server is running.
     Returns True if running, False otherwise.
-    
+
     """
     try:
         # The second column of each entry is a pid. See if that pid is in /proc/. Obviously Linux centric..
@@ -74,25 +98,26 @@ def status():
         #print e.returncode
         return False
 
-        
+
 def server_restart(quick=False):
     """ Restarts the server, optionally giving warning messages.
     If quick is True, the server will give a one minute warning to players.
     Returns status()
-    
+
     """
-    
+
     if status():
         server_stop(quick)
     server_start()
     return status()
-    
+
+
 def server_stop(quick=False):
     """ Stops the server, optionally giving warning messages.
     If quick is True, the server will give a one minute warning to players.
-    Returns False if the server isn't running, or if any of the the calls to 
-    shutdown or message the players fail. 
-    
+    Returns False if the server isn't running, or if any of the the calls to
+    shutdown or message the players fail.
+
     """
     if not status():
         #print "Server isn't running"
@@ -110,20 +135,21 @@ def server_stop(quick=False):
         if result == False:
             return False
         time.sleep(15)
-        
+
     cmd = console_cmd("say Server going down NOW! See you in 1 minute!")
     if result == False:
         return False
     time.sleep(5)
     return console_cmd("stop")
 
+
 def server_start():
-    """ Starts the Minecraft server. 
-    Returns False if the server is already running or if the call to start the 
+    """ Starts the Minecraft server.
+    Returns False if the server is already running or if the call to start the
     server fails, True otherwise.
-    
+
     """
-    
+
     if status():
         #print "Server already running in tmux session %s" % session_name
         return False
@@ -133,36 +159,40 @@ def server_start():
     #print "Minecraft started in tmux session %s" % session_name
     return True
 
+
 def prepare_save():
     """ Flushes the server contents to disk, then prevents additional saving
-    to the server. 
+    to the server.
     Returns False if either command false, True otherwise.
-    
+
     """
     if console_cmd("save-all") == False:
         return False
     time.sleep(1)
     return console_cmd("save-off")
-    
+
+
 def after_save():
     """ Reenables saving to disk. Useful after backing up the server.
     Returns False if the command fails, True otherwise.
-    
+
     """
     console_cmd("save-on")
     time.sleep(1)
     return True
 
+
 def server_say(message):
     """ Sends an in game message to the players from [CONSOLE].
     Returns False on empty message or failed server command. True otherwise.
-    
+
     """
     #TODO make this work for other users than [CONSOLE]
     if message == None or message == "":
         #print "No message!"
         return False
     return console_cmd("say %s" % (message))
+
 
 def server_quick_stop():
     """ Convenience function for quick stopping server. """
@@ -173,13 +203,14 @@ def server_quick_stop():
     time.sleep(3)
     return True
     #print 'Server stopped abruptly'
-    
+
+
 def give(player, item_id, num):
     """ Gives player the num item specified by item_id. If num is greater than
     64, it will be split into multiple give commands.
     Returns False if the server commands fail, num is <= 0, or player isn't
     logged in, True otherwise.
-    
+
     """
     if num <= 0:
         return False
@@ -194,11 +225,12 @@ def give(player, item_id, num):
                 return False
         num = int(num) - 64
     return True
-    
+
+
 def update():
-    """ Tries to update the server. Currently only supports vanilla updates. 
+    """ Tries to update the server. Currently only supports vanilla updates.
     Returns True if the server updated. Returns False otherwise.
-    
+
     """
     #TODO Support CraftBukkit, CraftBukkit++ and other servers.
     u = urllib2.urlopen('http://minecraft.net/download/minecraft_server.jar')
@@ -207,20 +239,21 @@ def update():
     f.close()
     testfile = file('%s/test_update' % minecraft_dir, 'rb')
     currentfile = file('%s/minecraft_server.jar' % minecraft_dir, 'rb')
-    
+
     if not zlib.adler32(testfile) == zlib.adler(currentfile):
         server_stop()
         shutil.move('%s/test_update' % minecraft_dir, '%s/minecraft_server' % minecraft_dir)
         server_start()
         return status()
     return True
-    
+
+
 def is_banned(player_or_ip, player_type=None):
     """ Checks if a player is currently banned. Player type can be specified,
     otherwise it will attempt to determine if player_or_ip is an IP or player.
     Acceptable values for player_type are "ip", "player" or None.
     Returns True if player is banned, False otherwise.
-    
+
     """
     if player_type == None:
         if _is_ip(player_or_ip):
@@ -237,7 +270,8 @@ def is_banned(player_or_ip, player_type=None):
                 # IP already banned
                 return True
     return False
-    
+
+
 def _is_ip(ip):
     """ Convenience function to determine if a string is an IP or not. """
     try:
@@ -246,13 +280,14 @@ def _is_ip(ip):
     except socket.error:
         return False
 
+
 def get_banned(player_type=None):
     """ Gets the list of banned players. If player_type is None, the list
     will contain both IPs and players. Acceptable values for player_type
     are "ip", "player" or None.
-    Returns None if there are no banned players or error. Returns a list 
+    Returns None if there are no banned players or error. Returns a list
     of banned players/IP otherwise.
-    
+
     """
     user_list = []
     if player_type not in ('player', 'ip', None):
@@ -275,7 +310,8 @@ def get_banned(player_type=None):
                 else:
                     user_list.append(user)
     return user_list
-    
+
+
 def get_whitelist():
     """ Returns a list of whitelisted users or None if there are none. """
     user_list = []
@@ -286,17 +322,18 @@ def get_whitelist():
             else:
                 user_list.append(user)
     return user_list
-    
+
+
 # Basically a wrapper..
 def ban(player_or_ip):
     """ Bans a player or IP. Attempts to determine if the arg is
     an IP or player. Returns False if player is already banned
     or banning fails, True otherwise.
-    
+
     """
     # Check if IP or player:
     if _is_ip(player_or_ip):
-        # IP! 
+        # IP!
         if is_banned(player_or_ip, 'ip'):
             return False
         return console_cmd("ban-ip %s" % (player_or_ip))
@@ -304,14 +341,14 @@ def ban(player_or_ip):
         # Must be a player..or invalid IP
         if is_banned(player_or_ip, 'player'):
             return False
-        return console_cmd("ban %s" % ( player_or_ip))
-        
-        
+        return console_cmd("ban %s" % (player_or_ip))
+
+
 def pardon(player_or_ip):
     """ Removes the ban on a player or IP. Attempts to determine if the arg is
     an IP or player. Returns False if the player is not banned or server
     command fails, True otherwise.
-    
+
     """
     # Check if IP or player:
     if _is_ip(player_or_ip):
@@ -322,12 +359,13 @@ def pardon(player_or_ip):
         if not is_banned(player_or_ip, 'player'):
             return False
         return console_cmd("pardon %s" % (player_or_ip))
-        
+
+
 def op(player):
     """ Sets a player to Op. Returns False if player is already an Op or
     server command fails.
-    
-    """ 
+
+    """
     if is_op(player):
         return False
     with open("%s/ops.txt" % (minecraft_dir), 'r') as users:
@@ -336,44 +374,47 @@ def op(player):
                 # IP already banned
                 return None
     console_cmd("op %s" % (player))
-        
+
+
 def deop(player):
     """ Removes a player from Op status. Returns False if player is not
-    already an Op or server command fails. True otherwise. 
-    
+    already an Op or server command fails. True otherwise.
+
     """
     if not is_op(player):
         return False
     console_cmd("deop %s" % (player))
-    
+
+
 def add_to_whitelist(player):
     """ Adds a player to the whitelist. Fails silently if player is already
     on the whitelist. Raises MinecraftCommandException if server command
     fails.
-    
+
     """
     if player not in get_whitelist():
         console_cmd("whitelist add %s" % (player))
         _whitelist_reload()
-        
+
+
 def remove_from_whitelist(player):
     """ Removes a player from the whitelist. Fails silently if player is
     not on the whitelist. Raises MinecraftCommandException if server command
     fails.
-    
+
     """
     console_cmd("whitelist remove %s" % (player))
     _whitelist_reload()
-    
 
-#TODO possible solution for ordering of YAML: 
+
+#TODO possible solution for ordering of YAML:
 # http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
 def parse_settings(filename):
     """ Parses filename into a dict. Filename should be the relative path to
     the settings file from minecraft_dir. Settings file can be a YAML
     file, key=value list, or a standard config file. Returns a dict if parsing
     is successful. Raises a MinecraftException otherwise.
-    
+
     """
     # Get full filename and path. Accepts full path, file in minecraft_dir
     # or config.yml/config,txt file in plugin directory in minecraft_dir
@@ -382,30 +423,30 @@ def parse_settings(filename):
             filename = '%s/%s' % (minecraft_dir, filename)
         elif os.path.exists('%s/plugins/%s/config.yml' % (minecraft_dir, filename)):
             filename = '%s/plugins/%s/config.yml' % (minecraft_dir, filename)
-        
+
         elif os.path.exists('%s/plugins/%s/config.txt' % (minecraft_dir, filename)):
             filename = '%s/plugins/%s/config.txt' % (minecraft_dir, filename)
         else:
             # Filename doesn't exist or plugin directory/ doesn't exist
-            raise MinecraftException("Filename %s does not exist." % (filename, ))
-            
+            raise MinecraftException("Filename %s does not exist." % (filename,))
+
     if filename[-4:] == '.yml':
         # Assume yaml
         try:
             import yaml
         except ImportError:
-            raise MinecraftException("Could not import YAML for file %s" % (filename, ))
+            raise MinecraftException("Could not import YAML for file %s" % (filename,))
         try:
             return yaml.load(open(filename))
         except yaml.YAMLError, e:
-            raise MinecraftException("Could not parse YAML file %s" % (filename, ))
+            raise MinecraftException("Could not parse YAML file %s" % (filename,))
     # Assume list or key=value
     try:
         with open(filename, 'r') as f:
             lines = f.readlines()
     except IOError, e:
-        raise MinecraftException("Could not read file %s" % (filename, ))
-        
+        raise MinecraftException("Could not read file %s" % (filename,))
+
     is_kv = False
     # Check list or key=value
     for line in lines:
@@ -413,7 +454,7 @@ def parse_settings(filename):
         if '=' in line:
             is_kv = True
             break
-    
+
     # On return, you can tell if k=v or not by testing type(props).
     # OrderedDict means k=v, list means text list
     if is_kv:
@@ -445,15 +486,13 @@ def parse_settings(filename):
                 continue
             props.append(line)
     return props
-    
-def write_settings(filename, properties):
-    # First find out if just a list, key=value, or YAML.
-    pass
+
+
 def parse_minecraft_settings(filename='server.properties'):
     """ Parses the main server.properties file. Can be used to parse other
     files of the same format. Returns a dict of the settings, or raises
     a MinecraftException if there is an error.
-    
+
     """
     #p = {}
     p = collections.OrderedDict()
@@ -469,35 +508,49 @@ def parse_minecraft_settings(filename='server.properties'):
                 return None
     return p
 
+
 def write_minecraft_settings(props, filename='server.properties'):
+    """ Writes out a minecraft settings/config file. Can be used for the
+    main config file or for plugin files. Takes a dict as props and
+    a filename relative to minecraft_dir.
+
+    Raises IOError if the file cannot be written
+    Raises SyntaxError if the given dict cannot be coerced into the settings
+    format
+
+    """
     # Check if original file is yaml or equals-separated
     print type(props)
     original_props = parse_minecraft_settings()
     print original_props
-    with open("%s/%s" % (minecraft_dir, filename), 'w') as f:
-        for key in original_props:
-            print type(original_props), key
-            if props.has_key(key):
-                if props[key] == None:
-                    if key.lstrip()[0] == '#':
-                        f.write(key.strip())
-                        if key[-1] != '\n':
-                            f.write('\n')
+    try:
+        with open("%s/%s" % (minecraft_dir, filename), 'w') as f:
+            for key in original_props:
+                print type(original_props), key
+                if key in props:
+                    if props[key] == None:
+                        if key.lstrip()[0] == '#':
+                            f.write(key.strip())
+                            if key[-1] != '\n':
+                                f.write('\n')
+                        else:
+                            f.write(key.strip() + '=\n')
                     else:
-                        f.write(key.strip() + '=\n')
+                        f.write("%s=%s\n" % (key.strip(), props[key].strip()))
                 else:
-                    f.write("%s=%s\n" % (key.strip(), props[key].strip()))
-            else:
-                if original_props[key] == None:
-                    if key.lstrip()[0] == '#':
-                        f.write(key.strip())
-                        if key[-1] != '\n':
-                            f.write('\n')
+                    if original_props[key] == None:
+                        if key.lstrip()[0] == '#':
+                            f.write(key.strip())
+                            if key[-1] != '\n':
+                                f.write('\n')
+                        else:
+                            f.write(key.strip() + '=\n')
                     else:
-                        f.write(key.strip() + '=\n')
-                else:
-                    f.write("%s=%s\n" % (key.strip(), original_props[key].strip()))
+                        f.write("%s=%s\n" % (key.strip(), original_props[key].strip()))
+    except IOError as e:
+        logger.exception()
     return True
+
 
 def get_plugin_config(name):
     # Check for yaml config file
@@ -506,8 +559,7 @@ def get_plugin_config(name):
             import yaml
         except ImportError:
             print "Couldn't import module 'yaml'"
-        return yaml.load(open('%s/plugins/%s/config.yml' % (minecraft_dir, name)))      
-    # Check for text config file
+        return yaml.load(open('%s/plugins/%s/config.yml' % (minecraft_dir, name)))    # Check for text config file
     elif os.path.exists("%s/plugins/%s/config.txt" % (minecraft_dir, name)):
         p = {}
         with open("%s/plugins/%s/config.txt" % (minecraft_dir, name)) as props:
@@ -525,7 +577,8 @@ def get_plugin_config(name):
     else:
         #print "can't work on this config file"
         return None
-        
+
+
 # Returns a tuple of ints; (X, Y, Z)
 def get_spawn():
     import nbt
@@ -535,6 +588,7 @@ def get_spawn():
     else:
         return (n[0]["SpawnX"].value, n[0]["SpawnY"].value, n[0]["SpawnZ"].value)
 
+
 def get_seed():
     import nbt
     n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
@@ -542,7 +596,8 @@ def get_seed():
         return None
     else:
         return n[0]["RandomSeed"].value
-        
+
+
 def is_thundering():
     import nbt
     n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
@@ -553,7 +608,8 @@ def is_thundering():
             return False
         elif n[0]["thundering"].value == 1:
             return True
-        
+
+
 def is_raining():
     import nbt
     n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
@@ -564,7 +620,8 @@ def is_raining():
             return False
         elif n[0]["raining"].value == 1:
             return True
-        
+
+
 def get_time():
     import nbt
     n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
@@ -573,6 +630,7 @@ def get_time():
     else:
         return n[0]["Time"].value % 24000
 
+
 def get_day():
     import nbt
     n = nbt.NBTFile('%s/%s/level.dat' % (minecraft_dir, session_name))
@@ -580,13 +638,15 @@ def get_day():
         return None
     else:
         return n[0]["Time"].value / 24000
-        
+
+
 def list_disabled_plugins():
     plugin_list = []
     for ob in os.listdir("%s/plugins_disabled" % minecraft_dir):
         if not os.path.isdir("%s/plugins_disabled/%s" % (minecraft_dir, ob)) and ob[-4:] == '.jar':
             plugin_list.append(ob[:-4])
     return plugin_list
+
 
 def list_plugins():
     plugin_list = []
@@ -595,24 +655,58 @@ def list_plugins():
             plugin_list.append(ob[:-4])
     return plugin_list
 
+
 # Returns True if enabled, False if not enabled
 def is_plugin_enabled(name):
-    plugins = list_plugins()
-    return name in plugins
+    """ Check if plugin is enabled.
+    Returns True if plugin is enabled. False otherwise.
 
-def disable_plugin(name):
+    raises NotBukkitException if server is not running Bukkit.
+
+    """
+
+    if config['minecraft_jar'] == 'vanilla':
+        raise NotBukkitException("No plugins on vanilla Minecraft server.")
+    return name in list_plugins()
+
+
+def disable_plugin(name, reload=True):
+    """ If plugin is not already disabled, disables the plugin. If reload
+    is True, sends a reload command to the server. Fails silently if
+    plugin is already disabled. Case sensitive on plugin name.
+
+    raises NotBukkitException if server is not running Bukkit.
+
+    """
+    if config['minecraft_jar'] == 'vanilla':
+        raise NotBukkitException("Cannot disable plugins on vanilla Minecraft server.")
     # Check if plugin is enabled
     if not os.path.exists("%s/plugins/%s.jar" % (minecraft_dir, name)):
         print "plugin not enabled"
         return False
-    # Check that plugin 
-    shutil.move("%s/plugins/%s.jar" % (minecraft_dir, name), "%s/plugins_disabled/" % (minecraft_dir, ))
+    # Check that plugin
+    shutil.move("%s/plugins/%s.jar" % (minecraft_dir, name), "%s/plugins_disabled/" % (minecraft_dir,))
     if os.path.exists("%s/plugins/%s/" % (minecraft_dir, name)):
-        shutil.move("%s/plugins/%s/" % (minecraft_dir, name), "%s/plugins_disabled/" % (minecraft_dir, ))
-    return True
-    
-def enable_plugin(name):
+        shutil.move("%s/plugins/%s/" % (minecraft_dir, name), "%s/plugins_disabled/" % (minecraft_dir,))
+    if reload:
+        try:
+            server_reload()
+        except MinecraftException as e:
+            raise MinecraftException("Plugin was disabled, but reloading failed.")
+    #return True
+
+
+def enable_plugin(name, reload=True):
+    """ If plugin is not already enabled, enables the plugin. If reload
+    is True, sends a reload command to the server. Fails silently if
+    plugin is already enabled. Case sensitive on plugin name.
+
+    raises NotBukkitException if server is not running Bukkit.
+
+    """
     # Check if plugin is already enabled
+    if config['minecraft_jar'] == 'vanilla':
+        raise NotBukkitException("Cannot enable plugins on vanilla Minecraft server.")
     if name + '.jar' in os.listdir("%s/plugins" % minecraft_dir):
                 print "plugin already enabled"
                 return False
@@ -620,11 +714,26 @@ def enable_plugin(name):
     if not os.path.exists("%s/plugins_disabled/%s.jar" % (minecraft_dir, name)):
         print "plugin doesn't exist in disabled directory. Try downloading it first."
         return None
-    shutil.move("%s/plugins_disabled/%s.jar" % (minecraft_dir, name), "%s/plugins/" % (minecraft_dir, ))
+    shutil.move("%s/plugins_disabled/%s.jar" % (minecraft_dir, name), "%s/plugins/" % (minecraft_dir,))
     if os.path.exists("%s/plugins_disabled/%s/" % (minecraft_dir, name)):
-            shutil.move("%s/plugins_disabled/%s/"    % (minecraft_dir, name), "%s/plugins/" % (minecraft_dir, ))
-    return True
-    
+        shutil.move("%s/plugins_disabled/%s/" % (minecraft_dir, name), "%s/plugins/" % (minecraft_dir,))
+    if reload:
+        try:
+            server_reload()
+        except MinecraftException as e:
+            raise MinecraftException("Plugin was enabled, but reloading failed.")
+        #return True
+
+
+def server_reload():
+    """ Sends a reload command to the server. This reloads all plugin configs
+    and enables or disables plugins """
+    try:
+        console_cmd("reload")
+    except MinecraftException as e:
+        raise MinecraftException("Reloading the server failed. Error %d" % e.errorcode)
+
+
 def get_player_ip(player):
     if os.path.exists("%s/server.log" % minecraft_dir):
         for line in reversed(open("%s/server.log" % minecraft_dir).readlines()):
@@ -636,18 +745,21 @@ def get_player_ip(player):
                     # Split at the : for the IP, leave off port, cut off first 2 characters = ip!
                     return ip_line.split(':')[0][2:]
 
+
 def kick(player):
     if player not in get_players():
         print "Player %s not currently connected." % (player)
         return False
     console_cmd("kick %s" % (player))
 
+
 def player_gamemode(player, gamemode):
     if gamemode != 0 and gamemode != 1:
         return False
     console_cmd("gamemode %s %s" % (player, gamemode))
     return True
-    
+
+
 def teleport(player, target_player):
     players = get_players()
     if player not in players:
@@ -658,7 +770,8 @@ def teleport(player, target_player):
         return False
     console_cmd("tp %s %s" % (player, target_player))
     return True
-    
+
+
 def give_xp(player, amount):
     if player not in get_players():
         print "Player %s not currently connected." % (player)
@@ -668,9 +781,11 @@ def give_xp(player, amount):
         return False
     console_cmd("xp %s %d" % (player, int(amount)))
 
+
 # Renew whitelist from disk. Call after adding or removing from whitelist.
 def _whitelist_reload():
     return console_cmd("whitelist reload")
+
 
 def whisper(player, message):
     if player not in get_players():
@@ -678,8 +793,10 @@ def whisper(player, message):
         return False
     return console_cmd("tell %s %s" % (player, message))
 
+
 def is_op(player):
     return player in get_ops()
+
 
 def get_ops():
     ops = []
@@ -693,7 +810,7 @@ def get_ops():
         return ops
     #print "No ops file"
     return []
-    
+
 ## Returns True if weather toggled on, False if toggled off.
 #def toggle_weather():
     #cmd = console_cmd("toggledownfall" "enter"' % (session_name,)
@@ -709,24 +826,28 @@ def get_ops():
                     #print line
                     #return True
     #return False
-                    
+
+
 def start_weather():
     if is_raining():
         return False
     else:
         return console_cmd("toggledownfall")
-        
+
+
 def stop_weather():
     if not is_raining():
         return False
     else:
         return console_cmd("toggledownfall")
 
+
 def set_time(time):
     if time < 0 or time > 24000:
         #print "Invalid time, must be between 0 and 24000."
         return False
     return console_cmd("time set %s" % (str(time)))
+
 
 def get_players():
     if console_cmd("list") == False:
@@ -741,7 +862,7 @@ def get_players():
             break
         else:
             cnt += 1
-            print line  
+            print line
             continue
         # Remove commas from players
         for player in players:
@@ -749,25 +870,27 @@ def get_players():
         break
     return ret_list
 
+
 def _santize_log_line(line):
     line = line.replace('\x1b[0m', '')
     line = line.replace('\x1b[35m', '')
     line = line.replace('\n', '')
     return line
-    
+
 # Get a number of lines from the log in reverse order (-1 for all).
 # Filter
+
 
 def get_logs(num_lines=-1, log_filter=None, chat_filter=None):
     if log_filter not in ('chat', 'players', None):
         #print "Invalid filter."
         return None
-        
+
     logfile = "%s/server.log" % minecraft_dir
     if not os.path.exists(logfile):
         #print "Log file doesn't exists"
         return None
-        
+
     cnt = 0
     ret_list = []
     for line in reversed(open(logfile).readlines()):
@@ -777,7 +900,7 @@ def get_logs(num_lines=-1, log_filter=None, chat_filter=None):
             cnt += 1
         elif chat_filter == 'chat' and "[Server]" in line:
             l = _santize_log_line(line).split()
-            ret_list.append(("chat", l[0], l[1] , l[3], " ".join(l[4:])))
+            ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
             cnt += 1
         elif chat_filter == 'players':
             if "logged in" in line or "logged out" in line or "lost connection" in line:
@@ -798,13 +921,14 @@ def get_logs(num_lines=-1, log_filter=None, chat_filter=None):
                 break
     return ret_list
 
+
 def backup():
     now = datetime.datetime.now()
     if now.minute == 0:
         print "Starting hourly save at hour %d" % now.hour
         prepare_save()
-        backup_filename = "%s/%s-hourly-%d.tar.gz" % ( backup_dir, session_name, now.hour,)
-        _call('tar czvf %s %s %s %s' % (backup_filename, os.path.join(minecraft_dir, session_name), os.path.join(minecraft_dir, session_name + "_the_end"), os.path.join(minecraft_dir, session_name + "_nether") ))
+        backup_filename = "%s/%s-hourly-%d.tar.gz" % (backup_dir, session_name, now.hour,)
+        _call('tar czvf %s %s %s %s' % (backup_filename, os.path.join(minecraft_dir, session_name), os.path.join(minecraft_dir, session_name + "_the_end"), os.path.join(minecraft_dir, session_name + "_nether")))
         #print "World backed up!"
         after_save()
         offsite_backup(backup_filename)
@@ -813,24 +937,25 @@ def backup():
     else:
         #print "Script must have been called manually. Making separate backup."
         prepare_save()
-        backup_filename = "%s/%s-manual-%d.tar.gz" % ( backup_dir, session_name, now.hour )
+        backup_filename = "%s/%s-manual-%d.tar.gz" % (backup_dir, session_name, now.hour)
         date_string = "%d-%d-%d_%d-%d" % (now.year, now.month, now.day, now.hour, now.minute)
-        _call('tar czvf %s %s' % (backup_filename, os.path.join(minecraft_dir, session_name) ))
+        _call('tar czvf %s %s' % (backup_filename, os.path.join(minecraft_dir, session_name)))
         #print "World backed up!"
         after_save()
-        offsite_backup(backup_filename) 
+        offsite_backup(backup_filename)
         #print "Offsite backup complete!"
         #return True
     # Daily backup, will keep 31 copies, then start overwriting.
     if now.hour == 0 and now.minute == 0:
-        hourly_backup = "%s/%s-hourly-%d.tar.gz" % ( backup_dir, session_name, now.hour )
-        daily_backup = "%s/%s-daily-%d.tar.gz" % ( backup_dir, session_name, now.day )
+        hourly_backup = "%s/%s-hourly-%d.tar.gz" % (backup_dir, session_name, now.hour)
+        daily_backup = "%s/%s-daily-%d.tar.gz" % (backup_dir, session_name, now.day)
         try:
             shutil.copy(hourly_backup, daily_backup)
         except Error, e:
             #print e
             return False
     return True
+
 
 # Assumes you already synced keys to scp_server and can login without a password
 def offsite_backup(filename):
@@ -841,12 +966,14 @@ def offsite_backup(filename):
     else:
         #print "Backup file %s didn't exist for offsite backup." % filename
         return False
-    
+
+
 def list_backups():
     pass
 
+
 if __name__ == '__main__':
-    
+
     import argparse
     parser = argparse.ArgumentParser(description="Process some integers.")
     parser.add_argument("command", help="The command to call.")
