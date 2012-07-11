@@ -99,6 +99,11 @@ class RedstoneServer:
         if mapper is not None:
             self.mapper = mapper
         # Write the config back to the config file
+        config['minecraft_dir'] = self.minecraft_dir
+        config['session_name'] = self.session_name
+        config['server_jar'] = self.server_jar
+        config['backup_dir'] = self.backup_dir
+        config['mapper'] = self.mapper
         configurator.write_config(config_file, config)
 
     ###
