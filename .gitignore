@@ -5,3 +5,4 @@ cherrypy.tar.gz
 *.py1
 *kate-swp*
 *u1conflict*
+*output.log
