@@ -1,13 +1,15 @@
 import unittest
+import pyredstone
+
 class TestServerStatus(unittest.TestCase):
     def setUp(self):
-        self.pr = 
+        self.pr = pyredstone.RedstoneServer('/home/josh/minecraft/pyredstone.cfg')
 
     def tearDown(self):
         pass
 
     def test_start(self):
-        pass
+        print 'woot.'
 
     def test_start_again(self):
         pass
@@ -23,3 +25,6 @@ class TestServerStatus(unittest.TestCase):
 
     def test_status(self):
         pass
+
+if __name__ == '__main__':
+    unittest.main()
