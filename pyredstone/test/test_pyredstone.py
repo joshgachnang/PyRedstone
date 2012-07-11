@@ -1,6 +1,8 @@
 import unittest
-import pyredstone
-
+try:
+    import pyredstone
+except ImportError as e:
+    import pyredstone.pyredstone as pyredstone
 class TestServerStatus(unittest.TestCase):
     def setUp(self):
         self.pr = pyredstone.RedstoneServer('/home/josh/minecraft/pyredstone.cfg')
