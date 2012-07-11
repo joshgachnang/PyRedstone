@@ -8,21 +8,17 @@ class TestServerStatus(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_start(self):
+    def test_start_stop(self):
+        print "Testing start/stop"
         self.pr.server_stop()
         self.pr.server_start()
-
-    def test_start_twice(self):
-        self.pr.server_stop()
-        self.pr.server_start()
-        self.pr.server_start()
-
-    def test_stop_again_twice(self):
+        print "Starting twice"
         self.pr.server_start()
         self.pr.server_stop()
+        print "Stopping twice"
         self.pr.server_stop()
 
-    def test_stop_quick(self):
+    def test_start_stop_quick(self):
         self.pr.server_start()
         self.pr.server_stop(quick=True)
 
