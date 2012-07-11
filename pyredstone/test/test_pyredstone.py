@@ -1,5 +1,5 @@
 import unittest
-import pyredstone
+from .. import pyredstone
 
 class TestServerStatus(unittest.TestCase):
     def setUp(self):
