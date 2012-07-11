@@ -19,17 +19,17 @@ logger = logging.getLogger('pyredstone')
 _version = '0.0.2'
 
 # Get server config
-config = configurator.get_config()
-session_name = 'troydoesntknow'
-self.minecraft_dir = '/home/josh/minecraft'
-bukkit = True
-if bukkit:
-    server_jar = 'craftbukkit.jar'
-else:
-    server_jar = 'minecraft_server.jar'
-backup_dir = '/home/josh/minecraft_backup'
-scp_server = 'josh@thepronserver'
-scp_server_target = '/backup/minecraft'
+#config = configurator.get_config()
+#session_name = 'troydoesntknow'
+#self.minecraft_dir = '/home/josh/minecraft'
+#bukkit = True
+#if bukkit:
+    #server_jar = 'craftbukkit.jar'
+#else:
+    #server_jar = 'minecraft_server.jar'
+#backup_dir = '/home/josh/minecraft_backup'
+#scp_server = 'josh@thepronserver'
+#scp_server_target = '/backup/minecraft'
 
 
 # Custom exceptions
