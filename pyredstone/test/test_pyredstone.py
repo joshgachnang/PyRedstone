@@ -9,22 +9,34 @@ class TestServerStatus(unittest.TestCase):
         pass
 
     def test_start(self):
-        print 'woot.'
+        self.pr.server_stop()
+        self.pr.server_start()
 
-    def test_start_again(self):
-        pass
+    def test_start_twice(self):
+        self.pr.server_stop()
+        self.pr.server_start()
+        self.pr.server_start()
 
-    def test_stop(self):
-        pass
+    def test_stop_again_twice(self):
+        self.pr.server_start()
+        self.pr.server_stop()
+        self.pr.server_stop()
 
-    def test_stop_again(self):
-        pass
+    def test_stop_quick(self):
+        self.pr.server_start()
+        self.pr.server_stop(quick=True)
 
     def test_restart(self):
-        pass
+        self.pr.server_stop()
+        self.pr.server_restart()
+        self.pr.server_restart()
+        self.pr.server_restart(quick=True)
 
     def test_status(self):
-        pass
+        self.pr.server_stop(quick=True)
+        self.assertFalse(self.pr.status())
+        self.pr.server_start()
+        self.assertTrue(self.pr.status())
 
 if __name__ == '__main__':
     unittest.main()
