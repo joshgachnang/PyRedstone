@@ -101,6 +101,10 @@ class RedstoneServer:
         # Write the config back to the config file
         configurator.write_config(config_file, config)
 
+    ###
+    # Convenience functions
+    ###
+
     def _call(self, cmd):
         """ Shell call convenience function.
         cmd: A command line string, exactly as would be executed on a shell.
@@ -119,6 +123,14 @@ class RedstoneServer:
         cmd = 'tmux send -t %s "%s" "enter"' % (session_name, msg)
         self._call(cmd)
 
+    def _is_ip(self, ip):
+        """ Convenience function to determine if a string is an IP or not. """
+        try:
+            socket.inet_aton(ip)
+            return True
+        except socket.error:
+            return False
+
     #TODO actually implement Twitter
     def twitter_say(self, message):
         if len(message) > 140:
@@ -126,37 +138,34 @@ class RedstoneServer:
         else:
             return True
 
-    def status(self):
-        """ Checks whether the Minecraft server is running.
-        Returns True if running, False otherwise.
+    def _santize_log_line(self, line):
+        """ Internal function to get rid of the hex and other
+        random characters from logging files so they can be displayed
+        to users.
         """
-        try:
-            # The second column of each entry is a pid. See if that pid is in /proc/. Obviously Linux centric..
-            #TODO update for screen and other ways of running Minecraft.
-            out = subprocess.check_output('ps aux | grep  tmux | grep "%s"' % session_name, shell=True)
-            pids = out.split('\n')
-            for pid in pids:
-                if len(pid.split()) < 2:
-    #                print "invalid pid? %s" % pid.split()
-                    continue
-                if os.path.exists('/proc/%s' % pid.split()[1]):
-                    return True
+        line = line.replace('\x1b[0m', '')
+        line = line.replace('\x1b[35m', '')
+        line = line.replace('\n', '')
+        return line
 
-            return False
-        except subprocess.CalledProcessError, e:
-            #print e.returncode
-            return False
+    ###
+    # Server commands
+    ###
 
-    def server_restart(self, quick=False):
-        """ Restarts the server, optionally giving warning messages.
-        If quick is True, the server will give a one minute warning to players.
-        Returns self.status()
+    def server_start(self):
+        """ Starts the Minecraft server.
+        Returns False if the server is already running or if the call to start the
+        server fails, True otherwise.
         """
 
         if self.status():
-            server_stop(quick)
-        server_start()
-        return self.status()
+            #print "Server already running in tmux session %s" % session_name
+            return False
+        cmd = 'tmux new -d -s %s "cd %s; java -Xms1524M -Xmx1524M -jar %s nogui"' % (session_name, self.minecraft_dir, server_jar)
+        self._call(cmd)
+        time.sleep(5)
+        #print "Minecraft started in tmux session %s" % session_name
+        return True
 
     def server_stop(self, quick=False):
         """ Stops the server, optionally giving warning messages.
@@ -182,84 +191,37 @@ class RedstoneServer:
                 return False
             time.sleep(15)
 
-        cmd = self.console_cmd("say Server going down NOW! See you in 1 minute!")
-        if result == False:
-            return False
-        time.sleep(5)
-        self.console_cmd("stop")
-
-    def server_start(self):
-        """ Starts the Minecraft server.
-        Returns False if the server is already running or if the call to start the
-        server fails, True otherwise.
+    def server_restart(self, quick=False):
+        """ Restarts the server, optionally giving warning messages.
+        If quick is True, the server will give a one minute warning to players.
+        Returns self.status()
         """
 
         if self.status():
-            #print "Server already running in tmux session %s" % session_name
-            return False
-        cmd = 'tmux new -d -s %s "cd %s; java -Xms1524M -Xmx1524M -jar %s nogui"' % (session_name, self.minecraft_dir, server_jar)
-        self._call(cmd)
-        time.sleep(5)
-        #print "Minecraft started in tmux session %s" % session_name
-        return True
+            server_stop(quick)
+        server_start()
+        return self.status()
 
-    def prepare_save(self):
-        """ Flushes the server contents to disk, then prevents additional saving
-        to the server.
-        Returns False if either command false, True otherwise.
+    def status(self):
+        """ Checks whether the Minecraft server is running.
+        Returns True if running, False otherwise.
         """
-        if self.console_cmd("save-all") == False:
-            return False
-        time.sleep(1)
-        self.console_cmd("save-off")
+        try:
+            # The second column of each entry is a pid. See if that pid is in /proc/. Obviously Linux centric..
+            #TODO update for screen and other ways of running Minecraft.
+            out = subprocess.check_output('ps aux | grep  tmux | grep "%s"' % session_name, shell=True)
+            pids = out.split('\n')
+            for pid in pids:
+                if len(pid.split()) < 2:
+    #                print "invalid pid? %s" % pid.split()
+                    continue
+                if os.path.exists('/proc/%s' % pid.split()[1]):
+                    return True
 
-    def after_save(self):
-        """ Reenables saving to disk. Useful after backing up the server.
-        Returns False if the command fails, True otherwise.
-        """
-        self.console_cmd("save-on")
-        time.sleep(1)
-        return True
-
-    def server_say(self, message):
-        """ Sends an in game message to the players from [CONSOLE].
-        Returns False on empty message or failed server command. True otherwise.
-        """
-        #TODO make this work for other users than [CONSOLE]
-        if message == None or message == "":
-            #print "No message!"
             return False
-        self.console_cmd("say %s" % (message))
-
-    def server_quick_stop(self):
-        """ Convenience function for quick stopping server. """
-        if not self.status():
-            #print "Server isn't running"
+        except subprocess.CalledProcessError, e:
+            #print e.returncode
             return False
-        self.console_cmd("stop")
-        time.sleep(3)
-        return True
-        #print 'Server stopped abruptly'
-
-    def give(self, player, item_id, num):
-        """ Gives player the num item specified by item_id. If num is greater than
-        64, it will be split into multiple give commands.
-        Returns False if the server commands fail, num is <= 0, or player isn't
-        logged in, True otherwise.
-        """
-        if num <= 0:
-            return False
-        if player not in get_players():
-            return False
-        while num > 0:
-            if num > 64:
-                if self.console_cmd("give %s %s %s" % (player, str(item_id), "64")) == False:
-                    return False
-            else:
-                if self.console_cmd("give %s %s %s" % (player, str(item_id), str(num))) == False:
-                    return False
-            num = int(num) - 64
-        return True
 
     def update(self):
         """ Tries to update the server. Currently only supports vanilla updates.
@@ -280,154 +242,11 @@ class RedstoneServer:
             return self.status()
         return True
 
-    def is_banned(self, player_or_ip, player_type=None):
-        """ Checks if a player is currently banned. Player type can be specified,
-        otherwise it will attempt to determine if player_or_ip is an IP or player.
-        Acceptable values for player_type are "ip", "player" or None.
-        Returns True if player is banned, False otherwise.
-        """
-        if player_type == None:
-            if self._is_ip(player_or_ip):
-                player_type = 'ip'
-            else:
-                player_type = 'player'
-        if player_type == 'ip':
-            f = 'banned-ips.txt'
-        else:
-            f = 'banned-players.txt'
-        with open("%s/%s" % (self.minecraft_dir, f), 'r') as users:
-            for user in users:
-                if user[:-1] == player_or_ip:
-                    # IP already banned
-                    return True
-        return False
+    ###
+    # Server Settings
+    ###
 
-    def _is_ip(self, ip):
-        """ Convenience function to determine if a string is an IP or not. """
-        try:
-            socket.inet_aton(ip)
-            return True
-        except socket.error:
-            return False
-
-    def get_banned(self, player_type=None):
-        """ Gets the list of banned players. If player_type is None, the list
-        will contain both IPs and players. Acceptable values for player_type
-        are "ip", "player" or None.
-        Returns None if there are no banned players or error. Returns a list
-        of banned players/IP otherwise.
-        """
-        user_list = []
-        if player_type not in ('player', 'ip', None):
-            print "Player must be either 'player', 'ip', or None"
-            return None
-        if player_type == 'player' or player_type == None:
-            with open("%s/%s" % (self.minecraft_dir, 'banned-players.txt'), 'r') as users:
-                for user in users:
-                    if user == '\n' or user == "None\n":
-                        continue
-                    if '\n' in user:
-                        user_list.append(user[:-1])
-                    else:
-                        user_list.append(user)
-        if player_type == 'ip' or player_type == None:
-            with open("%s/%s" % (self.minecraft_dir, 'banned-ips.txt'), 'r') as users:
-                for user in users:
-                    if '\n' in user:
-                        user_list.append(user[:-1])
-                    else:
-                        user_list.append(user)
-        return user_list
-
-    def get_whitelist(self):
-        """ Returns a list of whitelisted users or None if there are none. """
-        user_list = []
-        with open("%s/%s" % (self.minecraft_dir, 'white-list.txt'), 'r') as users:
-            for user in users:
-                if '\n' in user:
-                    user_list.append(user[:-1])
-                else:
-                    user_list.append(user)
-        return user_list
-
-    def disable_whitelist(self):
-        """ Disables the whitelist. All users can log in. """
-        self.console_cmd("whitelist off")
-
-    def enable_whitelist(self):
-        """ Prevents users not on the whitelist from connecting. Ops may
-        always connect. """
-        self.console_cmd("whitelist on")
-
-    # Basically a wrapper..
-    def ban(self, player_or_ip):
-        """ Bans a player or IP. Attempts to determine if the arg is
-        an IP or player. Returns False if player is already banned
-        or banning fails, True otherwise.
-        """
-        # Check if IP or player:
-        if self._is_ip(player_or_ip):
-            # IP!
-            if is_banned(player_or_ip, 'ip'):
-                return False
-            self.console_cmd("ban-ip %s" % (player_or_ip))
-        else:
-            # Must be a player..or invalid IP
-            if is_banned(player_or_ip, 'player'):
-                return False
-            self.console_cmd("ban %s" % (player_or_ip))
-
-    def pardon(self, player_or_ip):
-        """ Removes the ban on a player or IP. Attempts to determine if the arg is
-        an IP or player. Returns False if the player is not banned or server
-        command fails, True otherwise.
-        """
-        # Check if IP or player:
-        if self._is_ip(player_or_ip):
-            if not is_banned(player_or_ip, 'ip'):
-                return False
-            self.console_cmd("pardon-ip %s" % (player_or_ip))
-        else:
-            if not is_banned(player_or_ip, 'player'):
-                return False
-            self.console_cmd("pardon %s" % (player_or_ip))
-
-    def op(self, player):
-        """ Sets a player to Op. Raises MinecraftCommandException if server
-        command fails. Fails silently if player is already op.
-        """
-        with open("%s/ops.txt" % (self.minecraft_dir), 'r') as users:
-            for user in users:
-                if user == player:
-                    # IP already banned
-                    return
-        self.console_cmd("op %s" % (player))
-
-    def deop(self, player):
-        """ Removes a player from Op self.status. Raises MinecraftCommandException
-        if server command fails.
-        """
-
-        self.console_cmd("deop %s" % (player))
-
-    def add_to_whitelist(self, player):
-        """ Adds a player to the whitelist. Fails silently if player is already
-        on the whitelist. Raises MinecraftCommandException if server command
-        fails.
-        """
-        if player not in get_whitelist():
-            self.console_cmd("whitelist add %s" % (player))
-            self._whitelist_reload()
-
-    def remove_from_whitelist(self, player):
-        """ Removes a player from the whitelist. Fails silently if player is
-        not on the whitelist. Raises MinecraftCommandException if server command
-        fails.
-        """
-        self.console_cmd("whitelist remove %s" % (player))
-        self._whitelist_reload()
-
-    #TODO possible solution for ordering of YAML:
+    # TODO possible solution for ordering of YAML:
     # http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
     def parse_settings(self, filename):
         """ Parses filename into a dict. Filename should be the relative path to
@@ -566,39 +385,6 @@ class RedstoneServer:
             logger.exception()
         return True
 
-    def get_plugin_config(self, name):
-        """ Given a plugin, tries to find its main config file.
-        Raises IOError if the config file cannot be opened.
-        Raises SyntaxError if the config file cannot be found.
-        """
-        # Check for yaml config file
-        if os.path.exists("%s/plugins/%s/config.yml" % (self.minecraft_dir, name)):
-            try:
-                import yaml
-            except ImportError:
-                print "Couldn't import module 'yaml'"
-            return yaml.load(open('%s/plugins/%s/config.yml' % (self.minecraft_dir, name)))    # Check for text config file
-        elif os.path.exists("%s/plugins/%s/config.txt" % (self.minecraft_dir, name)):
-            p = {}
-            try:
-                with open("%s/plugins/%s/config.txt" % (self.minecraft_dir, name)) as props:
-                    for line in props:
-                        s = line.split('=')
-                        if len(s) == 2:
-                            p[s[0]] = s[1]
-                        elif len(s) == 1:
-                            p[s[0]] = None
-                        else:
-                            return None
-                return p
-            except IOError as e:
-                logger.exception("Couldn't open config.txt for plugin %s" % (plugin,))
-                raise IOError("Could not open config.txt for plugin %s" % (plugin,))
-        # Can't really work on it...
-        else:
-            #print "can't work on this config file"
-            raise SyntaxError("Could not find config file for plugin %s" % (plugin,))
-
     ###
     # In game status (NBT)
     ###
@@ -670,9 +456,336 @@ class RedstoneServer:
             return None
         else:
             return n[0]["Time"].value / 24000
+
+    def start_weather(self):
+        """ Starts a downfall in the server. Fails silently if already
+        downfalling. """
+        if is_raining():
+            logger.warning("Tried to start weather, but already in the middle of a downfall.")
+        else:
+            self.console_cmd("toggledownfall")
+
+    def stop_weather(self):
+        """ Stops a downfall in the server. Fails silently if already
+        stopped. """
+        if not is_raining():
+            logger.warning("Tried to stop weather, but downfall is already stopped.")
+        else:
+            self.console_cmd("toggledownfall")
+
+    def set_time(self, time):
+        """ Changes the tie in the server to time. Time must be between 0
+        and 24000. 0 is dawn, 6000 is midday, 12000 is dusk, and 18000 is
+        midnight. Raises MinecraftException if time is not between 0 and
+        24000 (inclusive).
+        """
+        if time < 0 or time > 24000:
+            #print "Invalid time, must be between 0 and 24000."
+            logger.error("Tried to set time to invalid time %d" % (time,))
+            raise MinecraftException("Tried to set time to invalid time %d" % (time,))
+        self.console_cmd("time set %s" % (str(time)))
+
+    def get_players(self):
+        """ Returns a list of players currently connected to the server.
+        """
+        self.console_cmd("list")
+        count = 0
+        ret_list = []
+        for line in reversed(open("%s/server.log" % self.minecraft_dir).readlines()):
+            if "Connected players" in line and count < 20:
+                #print "winning line: ", line[:-5]
+                players = line[:-4].split()[5:]
+            elif count >= 20:
+                break
+            else:
+                count += 1
+                print line
+                continue
+            # Remove commas from players
+            for player in players:
+                ret_list.append(player.replace(',', '', 1))
+            break
+        return ret_list
+
+    def get_logs(self, num_lines=-1, log_filter=None, chat_filter=None):
+        """ Get a number of lines from the log in reverse order (-1 for all).
+        log_filter can be chat, players, or None.
+        chat_filter will only return player chat.
+        TODO add advanced filtering.
+        """
+        if log_filter not in ('chat', 'players', None):
+            #print "Invalid filter."
+            return None
+
+        logfile = "%s/server.log" % self.minecraft_dir
+        if not os.path.exists(logfile):
+            #print "Log file doesn't exists"
+            return None
+
+        count = 0
+        ret_list = []
+        for line in reversed(open(logfile).readlines()):
+            if chat_filter == 'chat' and "<" in line and ">" in line and "[INFO]" in line:
+                l = _santize_log_line(line).split()
+                ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
+                count += 1
+            elif chat_filter == 'chat' and "[Server]" in line:
+                l = _santize_log_line(line).split()
+                ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
+                count += 1
+            elif chat_filter == 'players':
+                if "logged in" in line or "logged out" in line or "lost connection" in line:
+                    l = _santize_log_line(line).split()
+                    if "logged in" in line:
+                        action = "logged in"
+                    elif "logged out" in line or "lost connection" in line:
+                        action = "logged out"
+                    ret_list.append(("players", l[0], l[1], l[3], action))
+                    count += 1
+            elif chat_filter == None:
+                ret_list.append(("none", _santize_log_line(line)))
+                count += 1
+            if num_lines > 0:
+                #print count, num_lines, count < num_lines
+                if int(count) >= int(num_lines):
+                    #print 'a'
+                    break
+        return ret_list
+
+    ###
+    # Saving
+    ###
+
+    def prepare_save(self):
+        """ Flushes the server contents to disk, then prevents additional saving
+        to the server.
+        Returns False if either command false, True otherwise.
+        """
+        if self.console_cmd("save-all") == False:
+            return False
+        time.sleep(1)
+        self.console_cmd("save-off")
+
+    def after_save(self):
+        """ Reenables saving to disk. Useful after backing up the server.
+        Returns False if the command fails, True otherwise.
+        """
+        self.console_cmd("save-on")
+        time.sleep(1)
+        return True
+
+    ###
+    # Player management
+    ###
+
+    def set_default_gamemode(self, gamemode):
+        """ Changes a player's gamemode. Accepts either 0 (survival), or 1
+        (creative) or 2 (adventure) for gamemode. Fails silently if the player
+        is not connected.
+        """
+        if gamemode not in [0, 1, 2, 'creative', 'survival', 'adventure']:
+            logger.error("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
+            raise MinecraftException("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
+        self.console_cmd("defaultgamemode %s" % (str(gamemode)))
+
+    def is_banned(self, player_or_ip, player_type=None):
+        """ Checks if a player is currently banned. Player type can be specified,
+        otherwise it will attempt to determine if player_or_ip is an IP or player.
+        Acceptable values for player_type are "ip", "player" or None.
+        Returns True if player is banned, False otherwise.
+        """
+        if player_type == None:
+            if self._is_ip(player_or_ip):
+                player_type = 'ip'
+            else:
+                player_type = 'player'
+        if player_type == 'ip':
+            f = 'banned-ips.txt'
+        else:
+            f = 'banned-players.txt'
+        with open("%s/%s" % (self.minecraft_dir, f), 'r') as users:
+            for user in users:
+                if user[:-1] == player_or_ip:
+                    # IP already banned
+                    return True
+        return False
+
+    def get_banned(self, player_type=None):
+        """ Gets the list of banned players. If player_type is None, the list
+        will contain both IPs and players. Acceptable values for player_type
+        are "ip", "player" or None.
+        Returns None if there are no banned players or error. Returns a list
+        of banned players/IP otherwise.
+        """
+        user_list = []
+        if player_type not in ('player', 'ip', None):
+            print "Player must be either 'player', 'ip', or None"
+            return None
+        if player_type == 'player' or player_type == None:
+            with open("%s/%s" % (self.minecraft_dir, 'banned-players.txt'), 'r') as users:
+                for user in users:
+                    if user == '\n' or user == "None\n":
+                        continue
+                    if '\n' in user:
+                        user_list.append(user[:-1])
+                    else:
+                        user_list.append(user)
+        if player_type == 'ip' or player_type == None:
+            with open("%s/%s" % (self.minecraft_dir, 'banned-ips.txt'), 'r') as users:
+                for user in users:
+                    if '\n' in user:
+                        user_list.append(user[:-1])
+                    else:
+                        user_list.append(user)
+        return user_list
+
+    def ban(self, player_or_ip):
+        """ Bans a player or IP. Attempts to determine if the arg is
+        an IP or player. Returns False if player is already banned
+        or banning fails, True otherwise.
+        """
+        # Check if IP or player:
+        if self._is_ip(player_or_ip):
+            # IP!
+            if is_banned(player_or_ip, 'ip'):
+                return False
+            self.console_cmd("ban-ip %s" % (player_or_ip))
+        else:
+            # Must be a player..or invalid IP
+            if is_banned(player_or_ip, 'player'):
+                return False
+            self.console_cmd("ban %s" % (player_or_ip))
+
+    def pardon(self, player_or_ip):
+        """ Removes the ban on a player or IP. Attempts to determine if the arg is
+        an IP or player. Returns False if the player is not banned or server
+        command fails, True otherwise.
+        """
+        # Check if IP or player:
+        if self._is_ip(player_or_ip):
+            if not is_banned(player_or_ip, 'ip'):
+                return False
+            self.console_cmd("pardon-ip %s" % (player_or_ip))
+        else:
+            if not is_banned(player_or_ip, 'player'):
+                return False
+            self.console_cmd("pardon %s" % (player_or_ip))
+
+    def get_whitelist(self):
+        """ Returns a list of whitelisted users or None if there are none. """
+        user_list = []
+        with open("%s/%s" % (self.minecraft_dir, 'white-list.txt'), 'r') as users:
+            for user in users:
+                if '\n' in user:
+                    user_list.append(user[:-1])
+                else:
+                    user_list.append(user)
+        return user_list
+
+    def disable_whitelist(self):
+        """ Disables the whitelist. All users can log in. """
+        self.console_cmd("whitelist off")
+
+    def enable_whitelist(self):
+        """ Prevents users not on the whitelist from connecting. Ops may
+        always connect. """
+        self.console_cmd("whitelist on")
+
+    # Renew whitelist from disk. Call after adding or removing from whitelist.
+    def _whitelist_reload(self):
+        """ Reloads the whitelist so changes take affect.
+        """
+        self.console_cmd("whitelist reload")
+
+    def op(self, player):
+        """ Sets a player to Op. Raises MinecraftCommandException if server
+        command fails. Fails silently if player is already op.
+        """
+        with open("%s/ops.txt" % (self.minecraft_dir), 'r') as users:
+            for user in users:
+                if user == player:
+                    # IP already banned
+                    return
+        self.console_cmd("op %s" % (player))
+
+    def deop(self, player):
+        """ Removes a player from Op self.status. Raises MinecraftCommandException
+        if server command fails.
+        """
+
+        self.console_cmd("deop %s" % (player))
+
+    def is_op(self, player):
+        """ Returns True if player is listed as an Op, False otherwise. """
+        return player in get_ops()
+
+    def get_ops(self):
+        """ Returns a list of Ops, or None if ops file cannot be read. """
+        ops = []
+        if os.path.exists():
+            with open("%s/ops.txt" % self.minecraft_dir) as f:
+                for user in f:
+                    if user[-1] == '\n':
+                        ops.append(user[:-1])
+                    else:
+                        ops.append(user)
+            return ops
+        logging.warning("Could not find an ops file at %s/ops.txt" % self.minecraft_dir)
+        return None
+
+    def add_to_whitelist(self, player):
+        """ Adds a player to the whitelist. Fails silently if player is already
+        on the whitelist. Raises MinecraftCommandException if server command
+        fails.
+        """
+        if player not in get_whitelist():
+            self.console_cmd("whitelist add %s" % (player))
+            self._whitelist_reload()
+
+    def remove_from_whitelist(self, player):
+        """ Removes a player from the whitelist. Fails silently if player is
+        not on the whitelist. Raises MinecraftCommandException if server command
+        fails.
+        """
+        self.console_cmd("whitelist remove %s" % (player))
+        self._whitelist_reload()
+
     ###
     #Plugins
     ###
+
+    def get_plugin_config(self, name):
+        """ Given a plugin, tries to find its main config file.
+        Raises IOError if the config file cannot be opened.
+        Raises SyntaxError if the config file cannot be found.
+        """
+        # Check for yaml config file
+        if os.path.exists("%s/plugins/%s/config.yml" % (self.minecraft_dir, name)):
+            try:
+                import yaml
+            except ImportError:
+                print "Couldn't import module 'yaml'"
+            return yaml.load(open('%s/plugins/%s/config.yml' % (self.minecraft_dir, name)))    # Check for text config file
+        elif os.path.exists("%s/plugins/%s/config.txt" % (self.minecraft_dir, name)):
+            p = {}
+            try:
+                with open("%s/plugins/%s/config.txt" % (self.minecraft_dir, name)) as props:
+                    for line in props:
+                        s = line.split('=')
+                        if len(s) == 2:
+                            p[s[0]] = s[1]
+                        elif len(s) == 1:
+                            p[s[0]] = None
+                        else:
+                            return None
+                return p
+            except IOError as e:
+                logger.exception("Couldn't open config.txt for plugin %s" % (plugin,))
+                raise IOError("Could not open config.txt for plugin %s" % (plugin,))
+        # Can't really work on it...
+        else:
+            #print "can't work on this config file"
+            raise SyntaxError("Could not find config file for plugin %s" % (plugin,))
 
     def list_disabled_plugins(self):
         """ Returns a list of disabled plugins. """
@@ -762,6 +875,10 @@ class RedstoneServer:
         except MinecraftException as e:
             raise MinecraftException("Reloading the server failed. Error %d" % e.errorcode)
 
+    ###
+    # Player Commands
+    ###
+
     def get_player_ip(self, player, every_ip=False):
         """ Gets the last IP a player connected with. If every_ip is True,
         returns a list of IP's the player has connected with (in the current log)
@@ -798,15 +915,35 @@ class RedstoneServer:
             raise MinecraftException("Tried setting player %s gamemode to unacceptabled gamemode %s." % (player, str(gamemode),))
         self.console_cmd("gamemode %s %s" % (player, str(gamemode)))
 
-    def set_default_gamemode(self, gamemode):
-        """ Changes a player's gamemode. Accepts either 0 (survival), or 1
-        (creative) or 2 (adventure) for gamemode. Fails silently if the player
-        is not connected.
+    def server_say(self, message):
+        """ Sends an in game message to the players from [CONSOLE].
+        Returns False on empty message or failed server command. True otherwise.
         """
-        if gamemode not in [0, 1, 2, 'creative', 'survival', 'adventure']:
-            logger.error("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
-            raise MinecraftException("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
-        self.console_cmd("defaultgamemode %s" % (str(gamemode)))
+        #TODO make this work for other users than [CONSOLE]
+        if message == None or message == "":
+            #print "No message!"
+            return False
+        self.console_cmd("say %s" % (message))
+
+    def give(self, player, item_id, num):
+        """ Gives player the num item specified by item_id. If num is greater than
+        64, it will be split into multiple give commands.
+        Returns False if the server commands fail, num is <= 0, or player isn't
+        logged in, True otherwise.
+        """
+        if num <= 0:
+            return False
+        if player not in get_players():
+            return False
+        while num > 0:
+            if num > 64:
+                if self.console_cmd("give %s %s %s" % (player, str(item_id), "64")) == False:
+                    return False
+            else:
+                if self.console_cmd("give %s %s %s" % (player, str(item_id), str(num))) == False:
+                    return False
+            num = int(num) - 64
+        return True
 
     def teleport(self, player, target_player):
         """ Teleports player to target_player.
@@ -833,12 +970,6 @@ class RedstoneServer:
             raise MinecraftException("XP give amount must be between -5000 and 5000, was %d" % (amount,))
         self.console_cmd("xp %s %d" % (player, int(amount)))
 
-    # Renew whitelist from disk. Call after adding or removing from whitelist.
-    def _whitelist_reload(self):
-        """ Reloads the whitelist so changes take affect.
-        """
-        self.console_cmd("whitelist reload")
-
     def whisper(self, player, message):
         """ Sends a whisper to a player from the console. Fails silently if
         player is not connected.
@@ -846,130 +977,6 @@ class RedstoneServer:
         if player not in get_players():
             logging.info("Tried to whisper to player %s, who is not currently connected." % (player))
         self.console_cmd("tell %s %s" % (player, message))
-
-    def is_op(self, player):
-        """ Returns True if player is listed as an Op, False otherwise. """
-        return player in get_ops()
-
-    def get_ops(self):
-        """ Returns a list of Ops, or None if ops file cannot be read. """
-        ops = []
-        if os.path.exists():
-            with open("%s/ops.txt" % self.minecraft_dir) as f:
-                for user in f:
-                    if user[-1] == '\n':
-                        ops.append(user[:-1])
-                    else:
-                        ops.append(user)
-            return ops
-        logging.warning("Could not find an ops file at %s/ops.txt" % self.minecraft_dir)
-        return None
-
-    def start_weather(self):
-        """ Starts a downfall in the server. Fails silently if already
-        downfalling. """
-        if is_raining():
-            logger.warning("Tried to start weather, but already in the middle of a downfall.")
-        else:
-            self.console_cmd("toggledownfall")
-
-    def stop_weather(self):
-        """ Stops a downfall in the server. Fails silently if already
-        stopped. """
-        if not is_raining():
-            logger.warning("Tried to stop weather, but downfall is already stopped.")
-        else:
-            self.console_cmd("toggledownfall")
-
-    def set_time(self, time):
-        """ Changes the tie in the server to time. Time must be between 0
-        and 24000. 0 is dawn, 6000 is midday, 12000 is dusk, and 18000 is
-        midnight. Raises MinecraftException if time is not between 0 and
-        24000 (inclusive).
-        """
-        if time < 0 or time > 24000:
-            #print "Invalid time, must be between 0 and 24000."
-            logger.error("Tried to set time to invalid time %d" % (time,))
-            raise MinecraftException("Tried to set time to invalid time %d" % (time,))
-        self.console_cmd("time set %s" % (str(time)))
-
-    def get_players(self):
-        """ Returns a list of players currently connected to the server.
-        """
-        self.console_cmd("list")
-        count = 0
-        ret_list = []
-        for line in reversed(open("%s/server.log" % self.minecraft_dir).readlines()):
-            if "Connected players" in line and count < 20:
-                #print "winning line: ", line[:-5]
-                players = line[:-4].split()[5:]
-            elif count >= 20:
-                break
-            else:
-                count += 1
-                print line
-                continue
-            # Remove commas from players
-            for player in players:
-                ret_list.append(player.replace(',', '', 1))
-            break
-        return ret_list
-
-    def _santize_log_line(self, line):
-        """ Internal function to get rid of the hex and other
-        random characters from logging files so they can be displayed
-        to users.
-        """
-        line = line.replace('\x1b[0m', '')
-        line = line.replace('\x1b[35m', '')
-        line = line.replace('\n', '')
-        return line
-
-    def get_logs(self, num_lines=-1, log_filter=None, chat_filter=None):
-        """ Get a number of lines from the log in reverse order (-1 for all).
-        log_filter can be chat, players, or None.
-        chat_filter will only return player chat.
-        TODO add advanced filtering.
-        """
-        if log_filter not in ('chat', 'players', None):
-            #print "Invalid filter."
-            return None
-
-        logfile = "%s/server.log" % self.minecraft_dir
-        if not os.path.exists(logfile):
-            #print "Log file doesn't exists"
-            return None
-
-        count = 0
-        ret_list = []
-        for line in reversed(open(logfile).readlines()):
-            if chat_filter == 'chat' and "<" in line and ">" in line and "[INFO]" in line:
-                l = _santize_log_line(line).split()
-                ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
-                count += 1
-            elif chat_filter == 'chat' and "[Server]" in line:
-                l = _santize_log_line(line).split()
-                ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
-                count += 1
-            elif chat_filter == 'players':
-                if "logged in" in line or "logged out" in line or "lost connection" in line:
-                    l = _santize_log_line(line).split()
-                    if "logged in" in line:
-                        action = "logged in"
-                    elif "logged out" in line or "lost connection" in line:
-                        action = "logged out"
-                    ret_list.append(("players", l[0], l[1], l[3], action))
-                    count += 1
-            elif chat_filter == None:
-                ret_list.append(("none", _santize_log_line(line)))
-                count += 1
-            if num_lines > 0:
-                #print count, num_lines, count < num_lines
-                if int(count) >= int(num_lines):
-                    #print 'a'
-                    break
-        return ret_list
-
 
 if __name__ == '__main__':
 

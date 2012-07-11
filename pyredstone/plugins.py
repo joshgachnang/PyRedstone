@@ -78,7 +78,6 @@ def install_plugin(plugin_path, bukkit_base_path, overwrite_config=False):
         if zipfile.is_zipfile(plugin_path):
             logger.info("Plugin is a zip file. Extracting..")
             # Plugin is a zip. Extract and change jar_name
-            
             # First, get a list of items in plugin_path directory
             pre = os.listdir(os.path.dirname(plugin_path))
             zipper = zipfile.ZipFile(plugin_path)
