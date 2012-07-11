@@ -912,7 +912,7 @@ class RedstoneServer:
         """ Kicks a player out of the game. Fails silently if the player is
         not in the game.
         """
-        if player not in get_players():
+        if player not in self.get_players():
             logger.info("Tried to kick player %s, but player was not connected" % (player,))
         self.console_cmd("kick %s" % (player))
 
@@ -944,7 +944,7 @@ class RedstoneServer:
         """
         if num <= 0:
             return False
-        if player not in get_players():
+        if player not in self.get_players():
             return False
         while num > 0:
             if num > 64:
@@ -960,7 +960,7 @@ class RedstoneServer:
         """ Teleports player to target_player.
         Raises MinecraftException if either player is not connected.
         """
-        players = get_players()
+        players = self.get_players()
         if player not in players:
             logger.error("Tried to teleport player %s, who is not currently connected." % (player))
             raise MinecraftException("Tried to teleport player %s, who is not currently connected." % (player))
@@ -974,7 +974,7 @@ class RedstoneServer:
         Fails silently if player is not connected.
         Raises MinecraftException if amount is less than -5000 or more than 5000
         """
-        if player not in get_players():
+        if player not in self.get_players():
             logger.info("Tried to give XP to player %s, who is not currently connected." % (player))
         if int(amount) > 5000 or int(amount) < -5000:
             logger.error("XP give amount must be between -5000 and 5000, was %d" % (amount,))
@@ -985,7 +985,7 @@ class RedstoneServer:
         """ Sends a whisper to a player from the console. Fails silently if
         player is not connected.
         """
-        if player not in get_players():
+        if player not in self.get_players():
             logging.info("Tried to whisper to player %s, who is not currently connected." % (player))
         self.console_cmd("tell %s %s" % (player, message))
 
