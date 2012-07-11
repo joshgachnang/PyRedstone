@@ -66,6 +66,7 @@ class RedstoneServer:
         mapper: Name of mapping software. Choose from overviewer or mcmaps
         """
         # Try to find config file
+        write_config = False
         if config_file is None:
             if minecraft_dir is None or session_name is None or server_jar is None:
                 raise SyntaxError("You must specify either config_file, or all of minecraft_dir, session_name, and server_jar.")
@@ -74,6 +75,9 @@ class RedstoneServer:
                     config_file = os.path.join(minecraft_dir, 'pyredstone.cfg')
                 else:
                     config_file = 'pyredstone.cfg'
+                    write_config = True
+        else:
+            config = configurator.get_config(config_file)
         # Set variables that might not get set to defaults
         self.backup_dir = '/tmp'
         self.mapper = 'overviewer'
@@ -99,12 +103,13 @@ class RedstoneServer:
         if mapper is not None:
             self.mapper = mapper
         # Write the config back to the config file
-        config['minecraft_dir'] = self.minecraft_dir
-        config['session_name'] = self.session_name
-        config['server_jar'] = self.server_jar
-        config['backup_dir'] = self.backup_dir
-        config['mapper'] = self.mapper
-        configurator.write_config(config_file, config)
+        if write_config == True:
+            config['minecraft_dir'] = self.minecraft_dir
+            config['session_name'] = self.session_name
+            config['server_jar'] = self.server_jar
+            config['backup_dir'] = self.backup_dir
+            config['mapper'] = self.mapper
+            configurator.write_config(config_file, config)
 
     ###
     # Convenience functions
