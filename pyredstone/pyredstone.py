@@ -172,7 +172,7 @@ class RedstoneServer:
         if self.status():
             #print "Server already running in tmux session %s" % self.session_name
             return False
-        cmd = 'tmux new -d -s %s "cd %s; java -Xms1524M -Xmx1524M -jar %s nogui"' % (self.session_name, self.minecraft_dir, server_jar)
+        cmd = 'tmux new -d -s %s "cd %s; java -Xms1524M -Xmx1524M -jar %s nogui"' % (self.session_name, self.minecraft_dir, self.server_jar)
         self._call(cmd)
         time.sleep(5)
         #print "Minecraft started in tmux session %s" % self.session_name
@@ -209,8 +209,8 @@ class RedstoneServer:
         """
 
         if self.status():
-            server_stop(quick, msg=msg)
-        server_start()
+            self.server_stop(quick, msg=msg)
+        self.server_start()
         return self.status()
 
     def status(self):

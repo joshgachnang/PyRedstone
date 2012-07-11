@@ -1,5 +1,6 @@
 import unittest
 import pyredstone.pyredstone as pyredstone
+import time
 
 class TestServerStatus(unittest.TestCase):
     def setUp(self):
@@ -11,19 +12,34 @@ class TestServerStatus(unittest.TestCase):
     def test_start_stop(self):
         print "Testing start/stop"
         self.pr.server_stop(msg='Going down for testing')
+        print "Waiting for server to start up again."
+        while self.pr.status():
+            time.sleep(1)
         self.pr.server_start()
         print "Starting twice"
         self.pr.server_start()
         self.pr.server_stop(msg='Going down for testing')
+        print "Waiting for server to start up again."
+        while self.pr.status():
+            time.sleep(1)
         print "Stopping twice"
         self.pr.server_stop(msg='Going down for testing')
+        print "Waiting for server to start up again."
+        while self.pr.status():
+            time.sleep(1)
 
     def test_start_stop_quick(self):
         self.pr.server_start()
         self.pr.server_stop(quick=True, msg='Going down for testing')
+        print "Waiting for server to start up again."
+        while self.pr.status():
+            time.sleep(1)
 
     def test_restart(self):
         self.pr.server_stop(msg='Going down for testing')
+        print "Waiting for server to start up again."
+        while self.pr.status():
+            time.sleep(1)
         self.pr.server_restart(msg='Going down for testing')
         self.pr.server_restart(msg='Going down for testing')
         self.pr.server_restart(quick=True)

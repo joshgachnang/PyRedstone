@@ -107,3 +107,52 @@ DEBUG 2012-07-11 17:01:53,016 configurator ['Test']
 INFO 2012-07-11 17:01:53,017 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
 DEBUG 2012-07-11 17:01:53,017 configurator ['Test']
 INFO 2012-07-11 17:01:53,150 pyredstone Server going down in 1 minute.
+INFO 2012-07-11 17:09:42,369 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 17:09:42,369 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:09:42,370 configurator ['Test']
+INFO 2012-07-11 17:09:42,370 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:09:42,371 configurator ['Test']
+INFO 2012-07-11 17:09:42,445 pyredstone Server going down in 1 minute.
+INFO 2012-07-11 17:10:12,504 pyredstone Server going down in 30 seconds.
+INFO 2012-07-11 17:10:27,532 pyredstone Server going down in 15 seconds.
+INFO 2012-07-11 17:10:45,821 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 17:10:45,822 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:10:45,822 configurator ['Test']
+INFO 2012-07-11 17:10:45,823 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:10:45,823 configurator ['Test']
+WARNING 2012-07-11 17:10:45,866 pyredstone Server is already stopped.
+INFO 2012-07-11 17:10:45,959 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 17:10:45,960 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:10:45,961 configurator ['Test']
+INFO 2012-07-11 17:10:45,961 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:10:45,962 configurator ['Test']
+INFO 2012-07-11 17:10:46,005 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 17:10:46,005 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:10:46,006 configurator ['Test']
+INFO 2012-07-11 17:10:46,006 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:10:46,007 configurator ['Test']
+WARNING 2012-07-11 17:10:46,053 pyredstone Server is already stopped.
+INFO 2012-07-11 17:12:39,129 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 17:12:39,129 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:12:39,130 configurator ['Test']
+INFO 2012-07-11 17:12:39,130 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:12:39,131 configurator ['Test']
+INFO 2012-07-11 17:12:39,204 pyredstone Server going down in 1 minute.
+INFO 2012-07-11 17:13:09,261 pyredstone Server going down in 30 seconds.
+INFO 2012-07-11 17:13:24,291 pyredstone Server going down in 15 seconds.
+INFO 2012-07-11 17:15:01,938 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 17:15:01,939 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:15:01,939 configurator ['Test']
+INFO 2012-07-11 17:15:01,940 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:15:01,940 configurator ['Test']
+INFO 2012-07-11 17:15:02,014 pyredstone Server going down in 1 minute.
+INFO 2012-07-11 17:15:32,071 pyredstone Server going down in 30 seconds.
+INFO 2012-07-11 17:15:47,103 pyredstone Server going down in 15 seconds.
+INFO 2012-07-11 17:18:33,864 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 17:18:33,864 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:18:33,865 configurator ['Test']
+INFO 2012-07-11 17:18:33,865 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 17:18:33,865 configurator ['Test']
+INFO 2012-07-11 17:18:33,949 pyredstone Server going down in 1 minute.
+INFO 2012-07-11 17:19:03,999 pyredstone Server going down in 30 seconds.
+INFO 2012-07-11 17:19:19,021 pyredstone Server going down in 15 seconds.
