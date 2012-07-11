@@ -156,3 +156,29 @@ DEBUG 2012-07-11 17:18:33,865 configurator ['Test']
 INFO 2012-07-11 17:18:33,949 pyredstone Server going down in 1 minute.
 INFO 2012-07-11 17:19:03,999 pyredstone Server going down in 30 seconds.
 INFO 2012-07-11 17:19:19,021 pyredstone Server going down in 15 seconds.
+ERROR 2012-07-11 18:17:05,778 pyredstone Config file test.cfg does not exist.
+INFO 2012-07-11 18:17:05,779 pyredstone Asking configurator for config from test.cfg
+INFO 2012-07-11 18:17:05,779 configurator Getting config from config file test.cfg
+INFO 2012-07-11 18:17:16,148 pyredstone Asking configurator for config from example.cfg
+INFO 2012-07-11 18:17:16,148 configurator Getting config from config file example.cfg
+DEBUG 2012-07-11 18:17:16,148 configurator ['Test']
+INFO 2012-07-11 18:17:16,148 configurator Getting config from config file example.cfg
+DEBUG 2012-07-11 18:17:16,149 configurator ['Test']
+INFO 2012-07-11 18:18:27,484 pyredstone Asking configurator for config from example.cfg
+INFO 2012-07-11 18:18:27,484 configurator Getting config from config file example.cfg
+DEBUG 2012-07-11 18:18:27,485 configurator ['Test']
+INFO 2012-07-11 18:18:27,485 configurator Getting config from config file example.cfg
+DEBUG 2012-07-11 18:18:27,485 configurator ['Test']
+INFO 2012-07-11 18:18:41,128 pyredstone Asking configurator for config from example.cfg
+INFO 2012-07-11 18:18:41,128 configurator Getting config from config file example.cfg
+DEBUG 2012-07-11 18:18:41,129 configurator ['Test']
+INFO 2012-07-11 18:18:41,129 configurator Getting config from config file example.cfg
+DEBUG 2012-07-11 18:18:41,129 configurator ['Test']
+INFO 2012-07-11 18:19:11,982 pyredstone Asking configurator for config from example.cfg
+INFO 2012-07-11 18:19:11,982 configurator Getting config from config file example.cfg
+DEBUG 2012-07-11 18:19:11,982 configurator ['Test']
+INFO 2012-07-11 18:19:11,982 configurator Getting config from config file example.cfg
+DEBUG 2012-07-11 18:19:11,982 configurator ['Test']
+INFO 2012-07-11 18:21:43,718 pyredstone Asking configurator for config from example.cfg
+INFO 2012-07-11 18:21:43,719 configurator Getting config from config file example.cfg
+DEBUG 2012-07-11 18:21:43,719 configurator ['Test']

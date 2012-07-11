@@ -84,7 +84,7 @@ class RedstoneServer:
         self.mapper = 'overviewer'
         # Load config file and
         if os.path.exists(config_file):
-            config = configurator.get_config(config_file)
+            #config = configurator.get_config(config_file)
             self.minecraft_dir = config['minecraft_dir']
             self.session_name = config['session_name']
             self.server_jar = config['server_jar']
@@ -994,6 +994,11 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description="Process some integers.")
     parser.add_argument("command", help="The command to call.")
-    parser.add_argument("args", nargs="*", help="Args to pass to the command")
+    parser.add_argument("args", nargs="*", help="Args to pass to the command.")
+    parser.add_argument("--config", help="Path to config file.")
     args = parser.parse_args()
-    locals()[args.command](*args.args)
+    if not os.path.exists(args.config):
+        logger.error("Config file %s does not exist." % args.config)
+    rs = RedstoneServer(args.config)
+    method = getattr(rs, args.command)
+    print method(*args.args)
