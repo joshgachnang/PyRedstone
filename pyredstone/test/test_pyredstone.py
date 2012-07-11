@@ -1,8 +1,7 @@
 import unittest
-
 class TestServerStatus(unittest.TestCase):
     def setUp(self):
-        pass
+        self.pr = 
 
     def tearDown(self):
         pass
