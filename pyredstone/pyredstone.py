@@ -350,6 +350,15 @@ class RedstoneServer:
                     user_list.append(user)
         return user_list
 
+    def disable_whitelist(self):
+        """ Disables the whitelist. All users can log in. """
+        self.console_cmd("whitelist off")
+
+    def enable_whitelist(self):
+        """ Prevents users not on the whitelist from connecting. Ops may
+        always connect. """
+        self.console_cmd("whitelist on")
+
     # Basically a wrapper..
     def ban(self, player_or_ip):
         """ Bans a player or IP. Attempts to determine if the arg is
