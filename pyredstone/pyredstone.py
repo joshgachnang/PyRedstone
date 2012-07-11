@@ -77,6 +77,7 @@ class RedstoneServer:
                     config_file = 'pyredstone.cfg'
                     write_config = True
         else:
+            logger.info('Asking configurator for config from %s' % config_file)
             config = configurator.get_config(config_file)
         # Set variables that might not get set to defaults
         self.backup_dir = '/tmp'
@@ -130,7 +131,7 @@ class RedstoneServer:
 
     def console_cmd(self, msg):
         """ Sends a message to the server console. """
-        cmd = 'tmux send -t %s "%s" "enter"' % (session_name, msg)
+        cmd = 'tmux send -t %s "%s" "enter"' % (self.session_name, msg)
         self._call(cmd)
 
     def _is_ip(self, ip):
@@ -169,15 +170,15 @@ class RedstoneServer:
         """
 
         if self.status():
-            #print "Server already running in tmux session %s" % session_name
+            #print "Server already running in tmux session %s" % self.session_name
             return False
-        cmd = 'tmux new -d -s %s "cd %s; java -Xms1524M -Xmx1524M -jar %s nogui"' % (session_name, self.minecraft_dir, server_jar)
+        cmd = 'tmux new -d -s %s "cd %s; java -Xms1524M -Xmx1524M -jar %s nogui"' % (self.session_name, self.minecraft_dir, server_jar)
         self._call(cmd)
         time.sleep(5)
-        #print "Minecraft started in tmux session %s" % session_name
+        #print "Minecraft started in tmux session %s" % self.session_name
         return True
 
-    def server_stop(self, quick=False):
+    def server_stop(self, quick=False, msg=None):
         """ Stops the server, optionally giving warning messages.
         If quick is True, the server will give a one minute warning to players.
         Returns False if the server isn't running, or if any of the the calls to
@@ -185,30 +186,30 @@ class RedstoneServer:
 
         """
         if not self.status():
-            #print "Server isn't running"
-            return False
+            logger.warning("Server is already stopped.")
+            return
+        if msg:
+            self.console_cmd("Say %s" % msg)
         if not quick:
+            logger.info("Server going down in 1 minute.")
             result = self.console_cmd("say Server going down in 1 minute")
-            if result == False:
-                return False
             time.sleep(30)
+            logger.info("Server going down in 30 seconds.")
             cmd = self.console_cmd("say Server going down in 30 seconds")
-            if result == False:
-                return False
             time.sleep(15)
+            logger.info("Server going down in 15 seconds.")
             cmd = self.console_cmd("say Server going down in 15 seconds")
-            if result == False:
-                return False
             time.sleep(15)
+        self.console_cmd("stop")
 
-    def server_restart(self, quick=False):
+    def server_restart(self, quick=False, msg=None):
         """ Restarts the server, optionally giving warning messages.
         If quick is True, the server will give a one minute warning to players.
         Returns self.status()
         """
 
         if self.status():
-            server_stop(quick)
+            server_stop(quick, msg=msg)
         server_start()
         return self.status()
 
@@ -219,7 +220,7 @@ class RedstoneServer:
         try:
             # The second column of each entry is a pid. See if that pid is in /proc/. Obviously Linux centric..
             #TODO update for screen and other ways of running Minecraft.
-            out = subprocess.check_output('ps aux | grep  tmux | grep "%s"' % session_name, shell=True)
+            out = subprocess.check_output('ps aux | grep  tmux | grep "%s"' % self.session_name, shell=True)
             pids = out.split('\n')
             for pid in pids:
                 if len(pid.split()) < 2:
@@ -403,7 +404,7 @@ class RedstoneServer:
         """ Finds the spawn coordinates. Returns a 3tuple of ints in the format
         (X, Y, Z) or None if the coordinates cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -413,7 +414,7 @@ class RedstoneServer:
         """ Finds the seed of the server. Returns the seed as a string, or
         None if the seed cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -424,7 +425,7 @@ class RedstoneServer:
         thundering, False if not thundering, and None if the thundering state
         cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -438,7 +439,7 @@ class RedstoneServer:
         raining, False if not raining, and None if the raining state
         cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -451,7 +452,7 @@ class RedstoneServer:
         """ Gets the current in game time. Returns the time as an int between
         0 and 23999, or None if the time cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -461,7 +462,7 @@ class RedstoneServer:
         """ Gets the current number of elapsed in game days. Returns the days
         as an int, or None if the days cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, session_name))
+        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -896,7 +897,7 @@ class RedstoneServer:
         ip_list = []
         if os.path.exists("%s/server.log" % self.minecraft_dir):
             for line in reversed(open("%s/server.log" % self.minecraft_dir).readlines()):
-                if "logged in with entity id" in line and session_name in line:
+                if "logged in with entity id" in line and self.session_name in line:
                     # avoid issue where user "josh"'s ip is used for user "joshua".
                     words = line.split()
                     if words[3] == player:

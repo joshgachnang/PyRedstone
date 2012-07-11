@@ -10,26 +10,26 @@ class TestServerStatus(unittest.TestCase):
 
     def test_start_stop(self):
         print "Testing start/stop"
-        self.pr.server_stop()
+        self.pr.server_stop(msg='Going down for testing')
         self.pr.server_start()
         print "Starting twice"
         self.pr.server_start()
-        self.pr.server_stop()
+        self.pr.server_stop(msg='Going down for testing')
         print "Stopping twice"
-        self.pr.server_stop()
+        self.pr.server_stop(msg='Going down for testing')
 
     def test_start_stop_quick(self):
         self.pr.server_start()
-        self.pr.server_stop(quick=True)
+        self.pr.server_stop(quick=True, msg='Going down for testing')
 
     def test_restart(self):
-        self.pr.server_stop()
-        self.pr.server_restart()
-        self.pr.server_restart()
+        self.pr.server_stop(msg='Going down for testing')
+        self.pr.server_restart(msg='Going down for testing')
+        self.pr.server_restart(msg='Going down for testing')
         self.pr.server_restart(quick=True)
 
     def test_status(self):
-        self.pr.server_stop(quick=True)
+        self.pr.server_stop(quick=True, msg='Going down for testing')
         self.assertFalse(self.pr.status())
         self.pr.server_start()
         self.assertTrue(self.pr.status())

@@ -9,7 +9,8 @@ logging.config.dictConfig(logconfig.LOGGING)
 logger = logging.getLogger('pyredstone')
 
 
-def get_config(server=None, config_file=None):
+def get_config(config_file=None, server=None):
+    logger.info("Getting config from config file %s" % config_file)
     if config_file is None:
         config_file = '/home/minecraft/minecraft/pyredstone.cfg'
     if not os.path.exists(config_file):
