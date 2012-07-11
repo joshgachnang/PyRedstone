@@ -182,3 +182,30 @@ DEBUG 2012-07-11 18:19:11,982 configurator ['Test']
 INFO 2012-07-11 18:21:43,718 pyredstone Asking configurator for config from example.cfg
 INFO 2012-07-11 18:21:43,719 configurator Getting config from config file example.cfg
 DEBUG 2012-07-11 18:21:43,719 configurator ['Test']
+INFO 2012-07-11 18:38:05,898 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 18:38:05,898 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 18:38:05,899 configurator ['Test']
+INFO 2012-07-11 18:38:12,473 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 18:38:12,473 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 18:38:12,474 configurator ['Test']
+INFO 2012-07-11 18:38:12,539 pyredstone Server going down in 1 minute.
+INFO 2012-07-11 18:38:42,612 pyredstone Server going down in 30 seconds.
+INFO 2012-07-11 18:38:57,639 pyredstone Server going down in 15 seconds.
+INFO 2012-07-11 18:39:26,043 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 18:39:26,043 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 18:39:26,044 configurator ['Test']
+INFO 2012-07-11 18:40:30,465 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 18:40:30,465 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 18:40:30,466 configurator ['Test']
+INFO 2012-07-11 18:40:41,788 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 18:40:41,788 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 18:40:41,789 configurator ['Test']
+INFO 2012-07-11 18:44:02,741 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 18:44:02,741 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 18:44:02,742 configurator ['Test']
+INFO 2012-07-11 18:44:07,496 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 18:44:07,500 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 18:44:07,501 configurator ['Test']
+INFO 2012-07-11 18:44:17,679 pyredstone Asking configurator for config from /home/josh/minecraft/pyredstone.cfg
+INFO 2012-07-11 18:44:17,679 configurator Getting config from config file /home/josh/minecraft/pyredstone.cfg
+DEBUG 2012-07-11 18:44:17,683 configurator ['Test']

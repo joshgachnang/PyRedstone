@@ -658,12 +658,12 @@ class RedstoneServer:
         # Check if IP or player:
         if self._is_ip(player_or_ip):
             # IP!
-            if is_banned(player_or_ip, 'ip'):
+            if self.is_banned(player_or_ip, 'ip'):
                 return False
             self.console_cmd("ban-ip %s" % (player_or_ip))
         else:
             # Must be a player..or invalid IP
-            if is_banned(player_or_ip, 'player'):
+            if self.is_banned(player_or_ip, 'player'):
                 return False
             self.console_cmd("ban %s" % (player_or_ip))
 
@@ -674,11 +674,11 @@ class RedstoneServer:
         """
         # Check if IP or player:
         if self._is_ip(player_or_ip):
-            if not is_banned(player_or_ip, 'ip'):
+            if not self.is_banned(player_or_ip, 'ip'):
                 return False
             self.console_cmd("pardon-ip %s" % (player_or_ip))
         else:
-            if not is_banned(player_or_ip, 'player'):
+            if not self.is_banned(player_or_ip, 'player'):
                 return False
             self.console_cmd("pardon %s" % (player_or_ip))
 
