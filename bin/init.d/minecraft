@@ -1,0 +1,92 @@
+#!/bin/bash
+# /etc/init.d/minecraft
+# version 0.3.7 2012-03-06 (YYYY-MM-DD)
+
+### BEGIN INIT INFO
+# Provides:   minecraft
+# Required-Start: $local_fs $remote_fs
+# Required-Stop:  $local_fs $remote_fs
+# Should-Start:   $network
+# Should-Stop:    $network
+# Default-Start:  2 3 4 5
+# Default-Stop:   0 1 6
+# Short-Description:    Minecraft server
+# Description:    Starts the minecraft server
+### END INIT INFO
+
+# Variables
+USERNAME="minecraft"
+SERVICE={service}
+CONFIG=/home/$USERNAME/minecraft/pyredstone.cfg
+
+ME=$(whoami)
+as_user() {
+  if [ $ME == $USERNAME ] ; then
+    bash -c "$1"
+  else
+    su - $USERNAME -c "$1"
+  fi
+}
+mc_start() {
+    as_user "pyredstone.py --config $CONFIG server_start"
+}
+
+mc_stop() {
+    as_user "pyredstone.py --config $CONFIG server_stop"
+}
+
+mc_backup() {
+    as_user "pyredstone.py --config $CONFIG backup"
+}
+
+mc_update() {
+    as_user "pyredstone.py --config $CONFIG update"
+}
+
+mc_command() {
+    as_user "pyredstone.py --config $CONFIG console_cmd $1"
+}
+
+mc_status() {
+    as_user "pyredstone.py --config $CONFIG status"
+}
+#Start-Stop here
+case "$1" in
+  start)
+    mc_start
+    ;;
+  stop)
+    mc_stop
+    ;;
+  restart)
+    mc_stop
+    mc_start
+    ;;
+  update)
+    mc_stop
+    mc_backup
+    mc_update
+    mc_start
+    ;;
+  backup)
+    mc_backup
+    ;;
+  status)
+    mc_status
+    ;;
+  command)
+    if [ $# -gt 1 ]; then
+      shift
+      mc_command "$*"
+    else
+      echo "Must specify server command (try 'help'?)"
+    fi
+    ;;
+
+  *)
+  echo "Usage: $0 {start|stop|update|backup|status|restart|command \"server command\"}"
+  exit 1
+  ;;
+esac
+
+exit 0

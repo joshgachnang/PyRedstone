@@ -1,0 +1,9 @@
+cherrypy
+cherrypy.tar.gz
+*~
+*.pyc
+*.py1
+*kate-swp*
+*u1conflict*
+*output.log
+dist/
