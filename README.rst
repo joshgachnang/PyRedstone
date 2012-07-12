@@ -16,25 +16,34 @@ You must also have Tmux installed. To install it (on Ubuntu), run:
     sudo apt-get install -y tmux
 
 PyRedstone also relies on the following Python packages:
+
 *cherrypy
+
 *nbt
 
 pyredstone.py
 =============
 PyRedstone can be run from the commandline like so::
+
     python pyredstone.py --config /path/to/config COMMAND ARG1 ARG2...
 
 I have also included a file called redstone.py, which provides the same functionality, but is installed to the /usr/bin, so you can run it from anywhere like so::
+
     redstone.py --config /path/to/config COMMAND ARG1 ARG2...
+
 server.py
 =========
-The server can be started from the commandline or an init script. A sample init script is include in the package and on Github.
-**Note**: The server will attempt to write a PID file to /var/run/pyredstone. The directory must exist and be writable by the user starting the server (root if started by init script).::
+The server can be started from the commandline or an init script. A sample init script is include in the package and on Github::
+
     python server.py --config /path/to/config
 
-The server accepts JSON in the following format:
-**Note**: Username and auth_token are not implemented yet. They will likely be saved in the config file.::
+**Note**: The server will attempt to write a PID file to /var/run/pyredstone. The directory must exist and be writable by the user starting the server (root if started by init script).::
+
+The server accepts JSON in the following format::
+
     {"username": "USERNAME", "auth_token": "TOKEN", "action": "ACTION", "args": {"arg1": "ARG", "args": "ARG"}}
+
+**Note**: Username and auth_token are not implemented yet. They will likely be saved in the config file.
 
 Config File
 ===========
@@ -47,6 +56,7 @@ The config file is a standard, INI style config file. An example is included cal
     mapper = overviewer
 
 The variables are:
+
 * session_name: The name of the Tmux session that will be used.
 
 * minecraft_dir: The path to the directory containing *server_jar* and server.properties.
