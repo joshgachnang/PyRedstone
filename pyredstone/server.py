@@ -7,6 +7,9 @@ import ast
 from cherrypy.process.plugins import Daemonizer, PIDFile
 import logging
 import logging.config
+import logconfig
+import os
+import sys
 
 logging.config.dictConfig(logconfig.LOGGING)
 logger = logging.getLogger('pyredstone')
@@ -62,7 +65,7 @@ class Root:
             return {"result": result}
         else:
             logger.info("Plain GET request")
-            if pyredstone.status:
+            if rs.status():
                 return "Server is running."
             else:
                 return "Server is not running."
@@ -120,7 +123,7 @@ class Root:
             return response
         else:
             logger.info('Plan HTTP status request.')
-            if pyredstone.status:
+            if rs.status():
                 return "Server is running."
             else:
                 return "Server is not running."
@@ -128,18 +131,14 @@ class Root:
     batch.exposed = True
 
 if __name__ == "__main__":
-    # We'll be changing the global RedstoneServer
-    global rs
     # Check that run directory exists.
     if not os.path.exists('/var/run/pyredstone/'):
         try:
             os.mkdir('/var/run/pyredstone/')
-        except IOError as e:
+        except EnvironmentError as e:
             logger.error("Run directory /var/run/pyredstone/ does not exist and cannot be created.")
             sys.exit(1)
-        except OSError as e:
-            logger.error("Run directory /var/run/pyredstone/ does not exist and cannot be created.")
-            sys.exit(1)
+
     import argparse
     parser = argparse.ArgumentParser(description="Creates a remote HTTP/JSON API for the PyRedstone wrapper around a Minecraft Server.")
     parser.add_argument("--config", help="Path to PyRedstone config file.")
@@ -148,13 +147,14 @@ if __name__ == "__main__":
         logger.error("Config file %s does not exist." % args.config)
         sys.exit(1)
     logger.info("Creating RedstoneServer with config file %s" % (args.config,))
-    rs = RedstoneServer(args.config)
+    # Create global RedstoneServer
+    rs = pyredstone.RedstoneServer(args.config)
     logger.info("Starting server on 0.0.0.0:7777")
 
     # Daemonize the server
-        d = Daemonizer(cherrypy.engine)
-        d.subscribe()
-        PIDFile(cherrypy.engine, '/var/run/pyredstone/server.pid').subscribe()
+    d = Daemonizer(cherrypy.engine)
+    d.subscribe()
+    PIDFile(cherrypy.engine, '/var/run/pyredstone/server.pid').subscribe()
     cherrypy.config.update({"server.socket_host": "0.0.0.0",
                             "server.socket_port": 7777,
                             })
