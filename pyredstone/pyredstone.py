@@ -752,7 +752,7 @@ class RedstoneServer:
     def get_ops(self):
         """ Returns a list of Ops, or None if ops file cannot be read. """
         ops = []
-        if os.path.exists():
+        if os.path.exists("%s/ops.txt" % self.minecraft_dir):
             with open("%s/ops.txt" % self.minecraft_dir) as f:
                 for user in f:
                     if user[-1] == '\n':
@@ -760,8 +760,8 @@ class RedstoneServer:
                     else:
                         ops.append(user)
             return ops
-        logging.warning("Could not find an ops file at %s/ops.txt" % self.minecraft_dir)
-        return None
+        logging.error("Could not find an ops file at %s/ops.txt" % self.minecraft_dir)
+        raise MinecraftException("Could not find an ops file at %s/ops.txt" % self.minecraft_dir)
 
     def add_to_whitelist(self, player):
         """ Adds a player to the whitelist. Fails silently if player is already
