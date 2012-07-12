@@ -843,7 +843,7 @@ class RedstoneServer:
 
         if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft.jar':
             raise NotBukkitException("No plugins on vanilla Minecraft server.")
-        return name in list_plugins()
+        return name in self.list_plugins()
 
     def disable_plugin(self, name, reload=True):
         """ If plugin is not already disabled, disables the plugin. If reload
