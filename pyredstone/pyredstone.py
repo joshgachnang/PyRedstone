@@ -611,7 +611,7 @@ class RedstoneServer:
         try:
             gamemode = int(gamemode)
         except ValueError as e:
-            logger.error(("Got unknown value for set_default_gamemode. Needs to be an int or able to be cast as an int.")
+            logger.error("Got unknown value for set_default_gamemode. Needs to be an int or able to be cast as an int.")
             raise MinecraftException("Got unknown value for set_default_gamemode. Needs to be an int or able to be cast as an int.")
         if gamemode not in [0, 1, 2, '0', '1', '2', 'creative', 'survival', 'adventure']:
             logger.error("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
