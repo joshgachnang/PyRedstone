@@ -747,7 +747,7 @@ class RedstoneServer:
 
     def is_op(self, player):
         """ Returns True if player is listed as an Op, False otherwise. """
-        return player in get_ops()
+        return player in self.get_ops()
 
     def get_ops(self):
         """ Returns a list of Ops, or None if ops file cannot be read. """
