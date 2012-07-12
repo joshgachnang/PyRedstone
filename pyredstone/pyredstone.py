@@ -616,9 +616,9 @@ class RedstoneServer:
         if gamemode not in [0, 1, 2, '0', '1', '2', 'creative', 'survival', 'adventure']:
             logger.error("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
             raise MinecraftException("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
-        if gamemode == 'creative':
+        if gamemode == 'survival':
             gamemode = 0
-        elif gamemode == 'survival':
+        elif gamemode == 'creative':
             gamemode = 1
         elif gamemode == 'adventure':
             gamemode = 2
@@ -951,9 +951,9 @@ class RedstoneServer:
         if gamemode not in [0, 1, 2, '0', '1', '2', 'creative', 'survival', 'adventure']:
             logger.error("Tried setting player %s gamemode to unacceptabled gamemode %s." % (player, str(gamemode),))
             raise MinecraftException("Tried setting player %s gamemode to unacceptabled gamemode %s." % (player, str(gamemode),))
-        if gamemode == 'creative':
+        if gamemode == 'survival':
             gamemode = 0
-        elif gamemode == 'survival':
+        elif gamemode == 'creative':
             gamemode = 1
         elif gamemode == 'adventure':
             gamemode = 2
