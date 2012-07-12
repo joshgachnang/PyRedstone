@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='PyRedstone',
-    version='0.1.0',
+    version='0.0.9',
     author='Josh Gachnang',
     author_email='Josh@ServerCobra.com',
     packages=['pyredstone', 'pyredstone.test'],
