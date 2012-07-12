@@ -11,15 +11,15 @@ The code can be found on `GitHub <https://github.com/pcsforeducation/pyredstone>
 Requirements
 ============
 PyRedstone requires Python 2.7. It has only been tested on Ubuntu, specifically Ubuntu Server 12.04 x64. Additional testing is welcome, and all bugs will be considered. The only Python 2.7 features it relies on are logging.config.dictConfig and OrderedDict.
-You must also have Tmux installed. To install it (on Ubuntu), run:
+You must also have Tmux installed. To install it (on Ubuntu), run::
     sudo apt-get update
     sudo apt-get install -y tmux
 
 PyRedstone also relies on the following Python packages:
 
-*cherrypy
+* cherrypy
 
-*nbt
+* nbt
 
 pyredstone.py
 =============
@@ -37,22 +37,28 @@ The server can be started from the commandline or an init script. A sample init 
 
     python server.py --config /path/to/config
 
-**Note**: The server will attempt to write a PID file to /var/run/pyredstone. The directory must exist and be writable by the user starting the server (root if started by init script).::
+**Note** The server will attempt to write a PID file to /var/run/pyredstone. The directory must exist and be writable by the user starting the server (root if started by init script).
 
 The server accepts JSON in the following format::
 
     {"username": "USERNAME", "auth_token": "TOKEN", "action": "ACTION", "args": {"arg1": "ARG", "args": "ARG"}}
 
-**Note**: Username and auth_token are not implemented yet. They will likely be saved in the config file.
+**Note** Username and auth_token are not implemented yet. They will likely be saved in the config file.
 
 Config File
 ===========
 The config file is a standard, INI style config file. An example is included called example.cfg. The format should be as follows::
+
     [ServerName]
+
     session_name = troydoesntknow
+
     minecraft_dir = /home/josh/minecraft/
+
     server_jar = minecraft.jar
+
     backup_dir = /tmp
+
     mapper = overviewer
 
 The variables are:
