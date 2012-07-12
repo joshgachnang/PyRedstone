@@ -55,6 +55,10 @@ The config file is a standard, INI style config file. An example is included cal
     server_jar = minecraft.jar
     backup_dir = /tmp
     mapper = overviewer
+    memory_min = 512
+    memory_max = 1024
+    java_args = -XX:+AggressiveOpts
+    debug = False
 
 The variables are:
 
@@ -68,13 +72,21 @@ The variables are:
 
 * mapper: The mapper software. Not currently used.
 
-init.d
+* memory_min: Starting memory to be used by the server in megabytes.
+
+* memory_max: Maximum memory to be used by the server in megabytes.
+
+* java_args: Additional java_args to be executed when starting the server.
+
+* debug: Changes the level of output. True will print all debug messages. False will hide info and debug levels from the console, but still log to the files.
+
+Ubuntu Startup Scripts
 ======
 
-init.d/minecraft
+bin/init.d/minecraft
 ---------
 A standard init wrapper around PyRedstone. It gives the standard '/etc/init.d/minecraft start' interface for services. Acceptable commands are start, stop, restart, update, backup, status, and command. You need to customize USERNAME and CONFIG variables.
 
-init.d/redstone_server
+bin/init.d/redstone_server
 ---------------
 The redstone_server is an init wrapper for server.py. It allows you to start and stop server.py with the server. Acceptable commands are start, stop, restart, and status. You need to customize the USERNAME and CONFIG variables.
