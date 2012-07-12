@@ -1008,5 +1008,9 @@ if __name__ == '__main__':
     if not os.path.exists(args.config):
         logger.error("Config file %s does not exist." % args.config)
     rs = RedstoneServer(args.config)
-    method = getattr(rs, args.command)
+    try:
+        method = getattr(rs, args.command)
+    except AttributeError as e:
+        logger.error("%s is not a recognized command. Please try again." % args.command)
+        sys.exit(1)
     print method(*args.args)
