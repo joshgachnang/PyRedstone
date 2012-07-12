@@ -841,7 +841,7 @@ class RedstoneServer:
         raises NotBukkitException if server is not running Bukkit.
         """
 
-        if config['server_jar'] == 'vanilla':
+        if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft.jar':
             raise NotBukkitException("No plugins on vanilla Minecraft server.")
         return name in list_plugins()
 
