@@ -34,6 +34,7 @@ class Root:
             if "action" not in data_in:
                 logger.error("Requests require an action.")
                 raise cherrypy.HTTPError(400, "Requests require an action.")
+            # Decide what args we have
             if "args" not in data_in:
                 args = None
             elif "args" == {}:
@@ -46,11 +47,13 @@ class Root:
                 raise cherrypy.HTTPError(405, "Action %s prohibited" % data_in["action"])
             # Try to get the function from the RedstoneServer. Then pass the arg list.
             try:
+                logger.info("Attempting to call RedstoneServer function %s." % (data_in["action"]))
                 methodToCall = getattr(rs, data_in["action"])
                 if args is None:
                     result = methodToCall()
                 else:
                     result = methodToCall(**args)
+                #logger.info("Function %s returned " % data_in["action"], result)
             except AttributeError as e:
                 logger.error("Action %s not found." % data_in["action"])
                 raise cherrypy.HTTPError(404, "Action not found.")
