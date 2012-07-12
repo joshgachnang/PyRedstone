@@ -608,6 +608,11 @@ class RedstoneServer:
         (creative) or 2 (adventure) for gamemode. Fails silently if the player
         is not connected.
         """
+        try:
+            gamemode = int(gamemode)
+        except ValueError as e:
+            logger.error(("Got unknown value for set_default_gamemode. Needs to be an int or able to be cast as an int.")
+            raise MinecraftException("Got unknown value for set_default_gamemode. Needs to be an int or able to be cast as an int.")
         if gamemode not in [0, 1, 2, 'creative', 'survival', 'adventure']:
             logger.error("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
             raise MinecraftException("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
