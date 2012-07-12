@@ -852,8 +852,8 @@ class RedstoneServer:
 
         raises NotBukkitException if server is not running Bukkit.
         """
-        if config['server_jar'] == 'vanilla':
-            raise NotBukkitException("Cannot disable plugins on vanilla Minecraft server.")
+        if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft.jar':
+            raise NotBukkitException("No plugins on vanilla Minecraft server.")
         # Check if plugin is enabled
         if not os.path.exists("%s/plugins/%s.jar" % (self.minecraft_dir, name)):
             print "plugin not enabled"
@@ -876,9 +876,10 @@ class RedstoneServer:
 
         raises NotBukkitException if server is not running Bukkit.
         """
+
+        if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft.jar':
+            raise NotBukkitException("No plugins on vanilla Minecraft server.")
         # Check if plugin is already enabled
-        if config['server_jar'] == 'vanilla':
-            raise NotBukkitException("Cannot enable plugins on vanilla Minecraft server.")
         if name + '.jar' in os.listdir("%s/plugins" % self.minecraft_dir):
                     print "plugin already enabled"
                     return False
