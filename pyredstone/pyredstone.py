@@ -498,6 +498,11 @@ class RedstoneServer:
         midnight. Raises MinecraftException if time is not between 0 and
         24000 (inclusive).
         """
+        try:
+            time = int(time)
+        except ValueError as e:
+            logger.error("Got unknown value for set_time. Needs to be an int or able to be cast as an int.")
+            raise MinecraftException("Got unknown value for set_time. Needs to be an int or able to be cast as an int.")
         if time < 0 or time > 24000:
             #print "Invalid time, must be between 0 and 24000."
             logger.error("Tried to set time to invalid time %d" % (time,))
