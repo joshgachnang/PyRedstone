@@ -1025,13 +1025,14 @@ class RedstoneServer:
 if __name__ == '__main__':
 
     import argparse
-    parser = argparse.ArgumentParser(description="Process some integers.")
+    parser = argparse.ArgumentParser(description="A Minecraft server wrapper for vanilla and CraftBukkit servers.")
     parser.add_argument("command", help="The command to call.")
     parser.add_argument("args", nargs="*", help="Args to pass to the command.")
     parser.add_argument("--config", help="Path to config file.")
     args = parser.parse_args()
     if not os.path.exists(args.config):
         logger.error("Config file %s does not exist." % args.config)
+        sys.exit(1)
     rs = RedstoneServer(args.config)
     try:
         method = getattr(rs, args.command)

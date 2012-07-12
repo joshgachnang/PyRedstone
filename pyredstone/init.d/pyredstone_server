@@ -34,7 +34,7 @@ start() {
 	if [ ! -d /var/run/pyredstone/ ]; then
 		mkdir /var/run/pyredstone
 	fi
-	pyredstone_server.py
+	server.py
 }
 stop() {
 	if [ -f /var/run/pyredstone/server.pid ]; then

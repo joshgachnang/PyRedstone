@@ -2,17 +2,22 @@ import urllib2
 import json
 import urlparse
 
+
 class RepeaterEmptyReponse(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return repr(self.value)
-        
+
+
 class RepeaterInvalidReponse(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
-        return repr(self.value)   
+        return repr(self.value)
+
 
 class Repeater():
     """ Repeater is a class for connecting to a remote pyredstone server instance. """
@@ -42,7 +47,6 @@ class Repeater():
                 raise RepeaterEmptyResponse("Empty response received from the server")
             else:
                 raise RepeaterInvalidReponse("Invalid response received from the server")
-                
 
     def send_request(self, jdata, url=""):
         """ Given a JSON dict, send it to the server """
@@ -54,7 +58,7 @@ class Repeater():
         return j
 
     def batch(self, get_list):
-        """ Takes a list of tuples as get_list. The tuples should be of the form ("command", {arglist}) 
+        """ Takes a list of tuples as get_list. The tuples should be of the form ("command", {arglist})
         The JSON will look like: {"username": username, "auth_token": auth_token, "command": {"command", {arglist}}}
         """
         print "starting batch"
@@ -62,16 +66,16 @@ class Repeater():
         jdata["username"] = self.username
         jdata["auth_token"] = self.auth_token
         jdata["action_list"] = {}
-        
+
         for item in get_list:
             action = item[0]
             args = item[1]
             jdata["action_list"][action] = {"action": action, "args": args}
-        
+
         #print "Jdata is ", json.dumps(jdata)
-        
+
         #print json.loads(json.dumps(jdata))
-        
+
         response = self.send_request(json.dumps(jdata), "batch")
         if response is None:
             raise RepeaterEmptyResponse("Empty response received from the server")

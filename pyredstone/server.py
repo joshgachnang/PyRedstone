@@ -6,56 +6,22 @@ import json
 import ast
 from cherrypy.process.plugins import Daemonizer, PIDFile
 import logging
-from logging.config import dictConfig as dictconfig
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-        },
-        'simple': {
-            'format': '%(levelname)s %(message)s'
-        },
-    },
-    'handlers': {
+import logging.config
 
-        'file_log': {                 # define and name a second handler
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler', # set the logging class to log to a file
-            'formatter': 'verbose',         # define the formatter to associate
-            'filename': '/var/log/pyredstone_server.log'  # log file
-        },
-        'console':{
-            'level':'DEBUG',
-            'class':'logging.StreamHandler',
-            'formatter': 'simple'
-        },
-    },
-    'loggers': {
-        'logger': {               # define another logger
-            'handlers': ['file_log', 'console'],  # associate a different handler
-            'level': 'DEBUG',                 # specify the logging level
-            'propagate': True,
-        },
-    }
-}
-
-dictconfig(LOGGING)
-logger = logging.getLogger('logger')
+logging.config.dictConfig(logconfig.LOGGING)
+logger = logging.getLogger('pyredstone')
 
 prohibited_actions = ["_call"]
+rs = None
 
 class Root:
     @cherrypy.tools.json_out(on=True)
     @cherrypy.tools.json_in(on=True, )
-#    @cherrypy.tools.jsonify() 
     def index(self):
         """ Expects a JSON dict to be in cherrypy.request.json. Expected syntax of the JSON:
         {"action": "$action_name", "username": "$username", "auth_token": "$auth_token", "args": {"arg1": "arg1"...}, }
         """
         logger = logging.getLogger('logger')
-        print 'index'
         if hasattr(cherrypy.request, "json"):
             #logger.error("json", str(cherrypy.request.json), type(cherrypy.request.json), ast.literal_eval(str(cherrypy.request.json)))
             data_in = ast.literal_eval(str(cherrypy.request.json))
@@ -78,9 +44,9 @@ class Root:
             if data_in["action"] in prohibited_actions:
                 logger.error("Action %s prohibited" % data_in["action"])
                 raise cherrypy.HTTPError(405, "Action %s prohibited" % data_in["action"])
-            # Try to get the function from pyredstone module. Then pass the arg list.
+            # Try to get the function from the RedstoneServer. Then pass the arg list.
             try:
-                methodToCall = getattr(pyredstone, data_in["action"])
+                methodToCall = getattr(rs, data_in["action"])
                 if args is None:
                     result = methodToCall()
                 else:
@@ -88,7 +54,7 @@ class Root:
             except AttributeError as e:
                 logger.error("Action %s not found." % data_in["action"])
                 raise cherrypy.HTTPError(404, "Action not found.")
-            
+
             logger.debug(data_in)
             return {"result": result}
         else:
@@ -97,13 +63,13 @@ class Root:
                 return "Server is running."
             else:
                 return "Server is not running."
-            logger.debug("Plain GET request finished.")    
-    
+            logger.debug("Plain GET request finished.")
+
     def client_authenticate(self, username, auth_token):
         return True
 
     @cherrypy.tools.json_out(on=True)
-    @cherrypy.tools.json_in(on=True, )  
+    @cherrypy.tools.json_in(on=True, )
     def batch(self):
         """ Responds with JSON of the form {"action": "result", "other_action": "other_result"} """
         response = {}
@@ -146,12 +112,11 @@ class Root:
                 except AttributeError as e:
                     logger.error("Action %s not found." % action)
                     raise cherrypy.HTTPError(404, "Action %s not found." % action)
-                
                 response[action] = result
             logger.debug(response)
             return response
         else:
-            print 'status'
+            logger.info('Plan HTTP status request.')
             if pyredstone.status:
                 return "Server is running."
             else:
@@ -160,15 +125,34 @@ class Root:
     batch.exposed = True
 
 if __name__ == "__main__":
-	print "start"
-	logger.info("Starting server on 0.0.0.0:7777")
+    # We'll be changing the global RedstoneServer
+    global rs
+    # Check that run directory exists.
+    if not os.path.exists('/var/run/pyredstone/'):
+        try:
+            os.mkdir('/var/run/pyredstone/')
+        except IOError as e:
+            logger.error("Run directory /var/run/pyredstone/ does not exist and cannot be created.")
+            sys.exit(1)
+        except OSError as e:
+            logger.error("Run directory /var/run/pyredstone/ does not exist and cannot be created.")
+            sys.exit(1)
+    import argparse
+    parser = argparse.ArgumentParser(description="Creates a remote HTTP/JSON API for the PyRedstone wrapper around a Minecraft Server.")
+    parser.add_argument("--config", help="Path to PyRedstone config file.")
+    args = parser.parse_args()
+    if not os.path.exists(args.config):
+        logger.error("Config file %s does not exist." % args.config)
+        sys.exit(1)
+    logger.info("Creating RedstoneServer with config file %s" % (args.config,))
+    rs = RedstoneServer(args.config)
+    logger.info("Starting server on 0.0.0.0:7777")
 
-	# daemonize
-#	d = Daemonizer(cherrypy.engine)
-#	d.subscribe()
-#	PIDFile(cherrypy.engine, '/var/run/pyredstone/server.pid').subscribe()
-	cherrypy.config.update({"server.socket_host": "0.0.0.0",
-        	                "server.socket_port": 7777,
-                	       })
-	cherrypy.quickstart(Root())
-	print 'fuck'
+    # Daemonize the server
+        d = Daemonizer(cherrypy.engine)
+        d.subscribe()
+        PIDFile(cherrypy.engine, '/var/run/pyredstone/server.pid').subscribe()
+    cherrypy.config.update({"server.socket_host": "0.0.0.0",
+                            "server.socket_port": 7777,
+                            })
+    cherrypy.quickstart(Root())

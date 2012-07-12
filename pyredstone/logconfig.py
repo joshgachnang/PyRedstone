@@ -29,5 +29,5 @@ LOGGING = {
             'level': 'DEBUG',                 # specify the logging level
             'propagate': True,
         },
-    }
+    },
 }

@@ -43,6 +43,7 @@ def get_config(config_file=None, server=None):
         raise SyntaxError("Config file is improperly formated")
     return data
 
+
 def write_config(config_file, config):
     pass
 
