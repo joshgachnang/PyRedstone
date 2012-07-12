@@ -701,32 +701,6 @@ class RedstoneServer:
                 return False
             self.console_cmd("pardon %s" % (player_or_ip))
 
-    def get_whitelist(self):
-        """ Returns a list of whitelisted users or None if there are none. """
-        user_list = []
-        with open("%s/%s" % (self.minecraft_dir, 'white-list.txt'), 'r') as users:
-            for user in users:
-                if '\n' in user:
-                    user_list.append(user[:-1])
-                else:
-                    user_list.append(user)
-        return user_list
-
-    def disable_whitelist(self):
-        """ Disables the whitelist. All users can log in. """
-        self.console_cmd("whitelist off")
-
-    def enable_whitelist(self):
-        """ Prevents users not on the whitelist from connecting. Ops may
-        always connect. """
-        self.console_cmd("whitelist on")
-
-    # Renew whitelist from disk. Call after adding or removing from whitelist.
-    def _whitelist_reload(self):
-        """ Reloads the whitelist so changes take affect.
-        """
-        self.console_cmd("whitelist reload")
-
     def op(self, player):
         """ Sets a player to Op. Raises MinecraftCommandException if server
         command fails. Fails silently if player is already op.
@@ -762,6 +736,32 @@ class RedstoneServer:
             return ops
         logging.error("Could not find an ops file at %s/ops.txt" % self.minecraft_dir)
         raise MinecraftException("Could not find an ops file at %s/ops.txt" % self.minecraft_dir)
+
+    def get_whitelist(self):
+        """ Returns a list of whitelisted users or None if there are none. """
+        user_list = []
+        with open("%s/%s" % (self.minecraft_dir, 'white-list.txt'), 'r') as users:
+            for user in users:
+                if '\n' in user:
+                    user_list.append(user[:-1])
+                else:
+                    user_list.append(user)
+        return user_list
+
+    def disable_whitelist(self):
+        """ Disables the whitelist. All users can log in. """
+        self.console_cmd("whitelist off")
+
+    def enable_whitelist(self):
+        """ Prevents users not on the whitelist from connecting. Ops may
+        always connect. """
+        self.console_cmd("whitelist on")
+
+    # Renew whitelist from disk. Call after adding or removing from whitelist.
+    def _whitelist_reload(self):
+        """ Reloads the whitelist so changes take affect.
+        """
+        self.console_cmd("whitelist reload")
 
     def add_to_whitelist(self, player):
         """ Adds a player to the whitelist. Fails silently if player is already
