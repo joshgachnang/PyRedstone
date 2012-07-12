@@ -137,14 +137,13 @@ class RedstoneServer:
     ###
 
     def server_start(self):
-        """ Starts the Minecraft server.
-        Returns False if the server is already running or if the call to start the
-        server fails, True otherwise.
+        """ Starts the Minecraft server with args from config file.
+        Makes a warning log entry if already running and returns.
         """
 
         if self.status():
-            #print "Server already running in tmux session %s" % self.session_name
-            return False
+            logger.warning("Server already running.")
+            return
         if self.java_args is None:
             cmd = 'tmux new -d -s %s "cd %s; java -Xms%dM -Xmx%sM -jar %s nogui"' % (self.session_name, self.minecraft_dir, int(self.memory_min), int(self.memory_max), self.server_jar)
         else:
