@@ -26,7 +26,9 @@ server_defaults = {"session_name": "troydoesntknow",
 "memory_min": "512",
 "memory_max": "1024",
 "java_args": "-XX:+AggressiveOpts",
-"debug": "False",}
+"debug": "False",
+"prerelease": "False",
+}
 
 
 # Custom exceptions
@@ -134,6 +136,7 @@ class RedstoneServer:
 
     def download_file(self, url, output):
         u = urllib2.urlopen(url)
+        print output
         f = open(output, 'wb')
         meta = u.info()
         file_size = int(meta.getheaders("Content-Length")[0])
@@ -245,12 +248,15 @@ class RedstoneServer:
         vanilla prerelease, and latest bukkit.
         """
         # Choose between vanilla and bukkit
+        download_list = []
         if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft_server.jar':
             # Choose between latest and snapshot
             now = datetime.datetime.now()
             year = now.strftime("%y")
             week = now.strftime("%U")
+            print self.prerelease
             if self.prerelease == "True":
+                print "prerelease.."
                 download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week, 'b'))
                 download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week, 'a'))
                 download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week - 1, 'b'))
@@ -258,8 +264,9 @@ class RedstoneServer:
                 download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week - 2, 'b'))
                 download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week - 2, 'a'))
             else:
+                print "not prerelease.."
                 download_list.append('https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar')
-
+        print download_list
         # Download file
         for url in download_list:
             # Check if URL exists or not.
@@ -271,13 +278,13 @@ class RedstoneServer:
             except urllib2.URLError as e:
                 logger.exception("Problem downloading from %s" % (url,))
                 continue
-            with open(os.path.join('/tmp', self.server_jar)) as out:
-                try:
-                    self.download_file(download_url, out)
-                except EnvironmentError as e:
-                    raise MinecraftException("Could not download file.")
-                except urllib2.URLError as e:
-                    logger.exception("Download from %s failed." % (download_url,))
+            out = os.path.join('/tmp', self.server_jar)
+            try:
+                self.download_file(url, out)
+            except EnvironmentError as e:
+                raise MinecraftException("Could not download file.")
+            except urllib2.URLError as e:
+                logger.exception("Download from %s failed." % (url,))
 
             # Make a checksum and compare to server_jar
 
