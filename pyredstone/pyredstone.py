@@ -83,50 +83,6 @@ class RedstoneServer:
             else:
                 logger.debug("Setting %s: %s" % (key, config[key]))
                 setattr(self, key, config[key])
-        #if config_file is None:
-            #if minecraft_dir is None or session_name is None or server_jar is None:
-                #raise SyntaxError("You must specify either config_file, or all of minecraft_dir, session_name, and server_jar.")
-            #if minecraft_dir is not None:
-                #if os.path.exists(os.path.join(minecraft_dir, 'pyredstone.cfg')):
-                    #config_file = os.path.join(minecraft_dir, 'pyredstone.cfg')
-                #else:
-                    #config_file = 'pyredstone.cfg'
-                    #write_config = True
-        #else:
-            #logger.info('Asking configurator for config from %s' % config_file)
-            #config = configurator.get_config(config_file)
-        ## Set variables that might not get set to defaults
-        #self.backup_dir = '/tmp'
-        #self.mapper = 'overviewer'
-        ## Load config file and
-        #if os.path.exists(config_file):
-            ##config = configurator.get_config(config_file)
-            #self.minecraft_dir = config['minecraft_dir']
-            #self.session_name = config['session_name']
-            #self.server_jar = config['server_jar']
-            #if 'backup_dir' in config:
-                #self.backup_dir = config['backup_dir']
-            #if 'mapper' in config:
-                #self.mapper = config['mapper']
-        ## Overwrite config is provided
-        #if minecraft_dir is not None:
-            #self.minecraft_dir = minecraft_dir
-        #if session_name is not None:
-            #self.session_name = session_name
-        #if server_jar is not None:
-            #self.server_jar = server_jar
-        #if backup_dir is not None:
-            #self.backup_dir = backup_dir
-        #if mapper is not None:
-            #self.mapper = mapper
-        ## Write the config back to the config file
-        #if write_config == True:
-            #config['minecraft_dir'] = self.minecraft_dir
-            #config['session_name'] = self.session_name
-            #config['server_jar'] = self.server_jar
-            #config['backup_dir'] = self.backup_dir
-            #config['mapper'] = self.mapper
-            #configurator.write_config(config_file, config)
 
     ###
     # Convenience functions
@@ -189,7 +145,10 @@ class RedstoneServer:
         if self.status():
             #print "Server already running in tmux session %s" % self.session_name
             return False
-        cmd = 'tmux new -d -s %s "cd %s; java -Xms1524M -Xmx1524M -jar %s nogui"' % (self.session_name, self.minecraft_dir, self.server_jar)
+        if self.java_args is None:
+            cmd = 'tmux new -d -s %s "cd %s; java -Xms%dM -Xmx%sM -jar %s nogui"' % (self.session_name, self.minecraft_dir, int(self.memory_min), int(self.memory_max), self.server_jar)
+        else:
+            cmd = 'tmux new -d -s %s "cd %s; java -Xms%dM -Xmx%sM %s -jar %s nogui"' % (self.session_name, self.minecraft_dir, int(self.memory_min), int(self.memory_max), self.java_args, self.server_jar)
         # Cannot use normal call command. Check output fails with tmux creation.
         try:
             subprocess.call(cmd, shell=True)
