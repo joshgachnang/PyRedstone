@@ -22,8 +22,10 @@ PyRedstone also relies on the following Python packages:
 pyredstone.py
 =============
 PyRedstone can be run from the commandline like so:
-    python pyredstone.py --config /path/to/config status
+    python pyredstone.py --config /path/to/config COMMAND ARG1 ARG2...
 
+I have also included a file called redstone.py, which provides the same functionality, but is installed to the /usr/bin, so you can run it from anywhere like so:
+    redstone.py --config /path/to/config COMMAND ARG1 ARG2...
 server.py
 =========
 The server can be started from the commandline or an init script. A sample init script is include in the package and on Github.
@@ -38,11 +40,17 @@ Config File
 ===========
 The config file is a standard, INI style config file. An example is included called example.cfg. The format should be as follows:
     [ServerName]
+    
     session_name = troydoesntknow
+    
     minecraft_dir = /home/josh/minecraft/
+    
     server_jar = minecraft.jar
+    
     backup_dir = /tmp
+    
     mapper = overviewer
+    
 
 The variables are:
 * *session_name*: The name of the Tmux session that will be used.
