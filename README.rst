@@ -50,15 +50,10 @@ Config File
 The config file is a standard, INI style config file. An example is included called example.cfg. The format should be as follows::
 
     [ServerName]
-
     session_name = troydoesntknow
-
     minecraft_dir = /home/josh/minecraft/
-
     server_jar = minecraft.jar
-
     backup_dir = /tmp
-
     mapper = overviewer
 
 The variables are:
