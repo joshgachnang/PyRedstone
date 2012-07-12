@@ -16,8 +16,8 @@ You must also have Tmux installed. To install it (on Ubuntu), run:
     sudo apt-get install -y tmux
 
 PyRedstone also relies on the following Python packages:
-* cherrypy
-* nbt
+*cherrypy
+*nbt
 
 pyredstone.py
 =============
