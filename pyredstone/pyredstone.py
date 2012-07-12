@@ -864,7 +864,7 @@ class RedstoneServer:
             shutil.move("%s/plugins/%s/" % (self.minecraft_dir, name), "%s/plugins_disabled/" % (self.minecraft_dir,))
         if reload:
             try:
-                server_reload()
+                self.server_reload()
             except MinecraftException as e:
                 raise MinecraftException("Plugin was disabled, but reloading failed.")
         #return True
@@ -892,7 +892,7 @@ class RedstoneServer:
             shutil.move("%s/plugins_disabled/%s/" % (self.minecraft_dir, name), "%s/plugins/" % (self.minecraft_dir,))
         if reload:
             try:
-                server_reload()
+                self.server_reload()
             except MinecraftException as e:
                 raise MinecraftException("Plugin was enabled, but reloading failed.")
             #return True
