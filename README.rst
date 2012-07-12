@@ -53,11 +53,11 @@ The config file is a standard, INI style config file. An example is included cal
     
 
 The variables are:
-* *session_name*: The name of the Tmux session that will be used.
-* *minecraft_dir*: The path to the directory containing *server_jar* and server.properties.
-* *server_jar*: The name of the actual Minecraft server jar. The vanilla server is usually minecraft.jar, while CraftBukkit is usually craftbukkit.jar.
-* *backup_dir*: Where to put backup files. Not currently used.
-* *mapper*: The mapper software. Not currently used.
+* session_name: The name of the Tmux session that will be used.
+* minecraft_dir: The path to the directory containing *server_jar* and server.properties.
+* server_jar: The name of the actual Minecraft server jar. The vanilla server is usually minecraft.jar, while CraftBukkit is usually craftbukkit.jar.
+* backup_dir: Where to put backup files. Not currently used.
+* mapper: The mapper software. Not currently used.
 
 init.d
 ======

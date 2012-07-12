@@ -140,7 +140,7 @@ if __name__ == "__main__":
     # Try writing to directory.
     try:
         open('/var/run/pyredstone/test', 'w')
-        os.rm('/var/run/pyredstone/test')
+        os.remove('/var/run/pyredstone/test')
     except EnvironmentError as e:
         logger.error("Could not write to run directory /var/run/pyredstone. Try running 'sudo chown -R YOUR_USERNAME /var/run/pyredstone/'.")
         sys.exit(2)
