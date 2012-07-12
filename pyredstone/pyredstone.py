@@ -132,6 +132,27 @@ class RedstoneServer:
         line = line.replace('\n', '')
         return line
 
+    def download_file(self, url, output):
+        u = urllib2.urlopen(url)
+        f = open(output, 'wb')
+        meta = u.info()
+        file_size = int(meta.getheaders("Content-Length")[0])
+        print "Downloading: %s Bytes: %s" % (output, file_size)
+
+        file_size_dl = 0
+        block_sz = 8192
+        while True:
+            buffer = u.read(block_sz)
+            if not buffer:
+                break
+
+            file_size_dl += len(buffer)
+            f.write(buffer)
+            status = r"%10d  [%3.2f%%]" % (file_size_dl, file_size_dl * 100. / file_size)
+            status = status + chr(8)*(len(status)+1)
+            print status,
+
+        f.close()
     ###
     # Server commands
     ###
@@ -219,10 +240,47 @@ class RedstoneServer:
             return False
 
     def update(self):
-        """ Tries to update the server. Currently only supports vanilla updates.
-        Returns True if the server updated. Returns False otherwise.
+        """ Download a new copy of the server software, compare the checksum,
+        and if different, replace the server. Supports latest vanilla,
+        vanilla prerelease, and latest bukkit.
         """
-        #TODO Support CraftBukkit, CraftBukkit++ and other servers.
+        # Choose between vanilla and bukkit
+        if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft_server.jar':
+            # Choose between latest and snapshot
+            now = datetime.datetime.now()
+            year = now.strftime("%y")
+            week = now.strftime("%U")
+            if self.prerelease == "True":
+                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week, 'b'))
+                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week, 'a'))
+                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week - 1, 'b'))
+                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week - 1, 'a'))
+                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week - 2, 'b'))
+                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week - 2, 'a'))
+            else:
+                download_list.append('https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar')
+
+        # Download file
+        for url in download_list:
+            # Check if URL exists or not.
+            try:
+                code = urllib2.urlopen(url).getcode()
+                if code != 200:
+                    logger.info("Could not download from %s, got code %d" % (url, code))
+                    continue
+            except urllib2.URLError as e:
+                logger.exception("Problem downloading from %s" % (url,))
+                continue
+            with open(os.path.join('/tmp', self.server_jar)) as out:
+                try:
+                    self.download_file(download_url, out)
+                except EnvironmentError as e:
+                    raise MinecraftException("Could not download file.")
+                except urllib2.URLError as e:
+                    logger.exception("Download from %s failed." % (download_url,))
+
+            # Make a checksum and compare to server_jar
+
         u = urllib2.urlopen('http://minecraft.net/download/minecraft_server.jar')
         f = open('%s/test_update' % self.minecraft_dir, 'w')
         f.write(u.read())
@@ -822,7 +880,7 @@ class RedstoneServer:
         raises NotBukkitException if server is not running Bukkit.
         """
 
-        if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft.jar':
+        if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft_server.jar':
             raise NotBukkitException("No plugins on vanilla Minecraft server.")
         return name in self.list_plugins()
 
@@ -833,7 +891,7 @@ class RedstoneServer:
 
         raises NotBukkitException if server is not running Bukkit.
         """
-        if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft.jar':
+        if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft_server.jar':
             raise NotBukkitException("No plugins on vanilla Minecraft server.")
         # Check if plugin is enabled
         if not os.path.exists("%s/plugins/%s.jar" % (self.minecraft_dir, name)):
@@ -858,7 +916,7 @@ class RedstoneServer:
         raises NotBukkitException if server is not running Bukkit.
         """
 
-        if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft.jar':
+        if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft_server.jar':
             raise NotBukkitException("No plugins on vanilla Minecraft server.")
         # Check if plugin is already enabled
         if name + '.jar' in os.listdir("%s/plugins" % self.minecraft_dir):
