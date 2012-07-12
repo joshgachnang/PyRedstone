@@ -12,6 +12,9 @@ if __name__ == '__main__':
     parser.add_argument("args", nargs="*", help="Args to pass to the command.")
     parser.add_argument("--config", help="Path to config file.")
     args = parser.parse_args()
+    if args.config is None and not os.path.exists("/home/minecraft/minecraft/pyredstone.cfg"):
+        logger.error("No config file specified and default config file /home/minecraft/minecraft/pyredstone.cfg does not exist.")
+        sys.exit(1)
     if not os.path.exists(args.config):
         logger.error("Config file %s does not exist." % args.config)
         sys.exit(1)
