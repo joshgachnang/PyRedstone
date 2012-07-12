@@ -616,6 +616,12 @@ class RedstoneServer:
         if gamemode not in [0, 1, 2, '0', '1', '2', 'creative', 'survival', 'adventure']:
             logger.error("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
             raise MinecraftException("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
+        if gamemode == 'creative':
+            gamemode = 0
+        elif gamemode == 'survival':
+            gamemode = 1
+        elif gamemode == 'adventure':
+            gamemode = 2
         self.console_cmd("defaultgamemode %s" % (str(gamemode)))
 
     def is_banned(self, player_or_ip, player_type=None):
@@ -945,6 +951,12 @@ class RedstoneServer:
         if gamemode not in [0, 1, 2, '0', '1', '2', 'creative', 'survival', 'adventure']:
             logger.error("Tried setting player %s gamemode to unacceptabled gamemode %s." % (player, str(gamemode),))
             raise MinecraftException("Tried setting player %s gamemode to unacceptabled gamemode %s." % (player, str(gamemode),))
+        if gamemode == 'creative':
+            gamemode = 0
+        elif gamemode == 'survival':
+            gamemode = 1
+        elif gamemode == 'adventure':
+            gamemode = 2
         self.console_cmd("gamemode %s %s" % (player, str(gamemode)))
 
     def server_say(self, message):
