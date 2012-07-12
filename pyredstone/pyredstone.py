@@ -149,7 +149,7 @@ class RedstoneServer:
         else:
             return True
 
-    def _santize_log_line(self, line):
+    def _sanitize_log_line(self, line):
         """ Internal function to get rid of the hex and other
         random characters from logging files so they can be displayed
         to users.
@@ -551,16 +551,16 @@ class RedstoneServer:
         ret_list = []
         for line in reversed(open(logfile).readlines()):
             if chat_filter == 'chat' and "<" in line and ">" in line and "[INFO]" in line:
-                l = self._santize_log_line(line).split()
+                l = self._sanitize_log_line(line).split()
                 ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
                 count += 1
             elif chat_filter == 'chat' and "[Server]" in line:
-                l = self._santize_log_line(line).split()
+                l = self._sanitize_log_line(line).split()
                 ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
                 count += 1
             elif chat_filter == 'players':
                 if "logged in" in line or "logged out" in line or "lost connection" in line:
-                    l = self._santize_log_line(line).split()
+                    l = self._sanitize_log_line(line).split()
                     if "logged in" in line:
                         action = "logged in"
                     elif "logged out" in line or "lost connection" in line:
@@ -568,7 +568,7 @@ class RedstoneServer:
                     ret_list.append(("players", l[0], l[1], l[3], action))
                     count += 1
             elif chat_filter == None:
-                ret_list.append(("none", self._santize_log_line(line)))
+                ret_list.append(("none", self._sanitize_log_line(line)))
                 count += 1
             if num_lines > 0:
                 #print count, num_lines, count < num_lines
