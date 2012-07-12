@@ -768,7 +768,7 @@ class RedstoneServer:
         on the whitelist. Raises MinecraftCommandException if server command
         fails.
         """
-        if player not in get_whitelist():
+        if player not in self.get_whitelist():
             self.console_cmd("whitelist add %s" % (player))
             self._whitelist_reload()
 
