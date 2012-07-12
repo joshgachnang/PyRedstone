@@ -28,27 +28,34 @@ as_user() {
   fi
 }
 mc_start() {
-    as_user "pyredstone.py --config $CONFIG server_start"
+    as_user "redstone.py --config $CONFIG server_start"
 }
 
 mc_stop() {
-    as_user "pyredstone.py --config $CONFIG server_stop"
+    as_user "redstone.py --config $CONFIG server_stop"
 }
 
 mc_backup() {
-    as_user "pyredstone.py --config $CONFIG backup"
+    as_user "redstone.py --config $CONFIG backup"
 }
 
 mc_update() {
-    as_user "pyredstone.py --config $CONFIG update"
+    as_user "redstone.py --config $CONFIG update"
 }
 
 mc_command() {
-    as_user "pyredstone.py --config $CONFIG console_cmd $1"
+    as_user "redstone.py --config $CONFIG console_cmd $1"
 }
 
 mc_status() {
-    as_user "pyredstone.py --config $CONFIG status"
+    status=$(as_user "redstone.py --config $CONFIG status")
+    if [ "$status" == "True" ]; then
+        echo "Minecraft is running."
+    elif [ "$status" == "False" ]; then
+        echo "Minecraft is stopped."
+    else
+        echo "Minecraft status unknown. Got: $status"
+    fi
 }
 #Start-Stop here
 case "$1" in

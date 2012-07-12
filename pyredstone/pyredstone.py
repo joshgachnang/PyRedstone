@@ -18,18 +18,15 @@ logging.config.dictConfig(logconfig.LOGGING)
 logger = logging.getLogger('pyredstone')
 _version = '0.0.2'
 
-# Get server config
-#config = configurator.get_config()
-#session_name = 'troydoesntknow'
-#self.minecraft_dir = '/home/josh/minecraft'
-#bukkit = True
-#if bukkit:
-    #server_jar = 'craftbukkit.jar'
-#else:
-    #server_jar = 'minecraft_server.jar'
-#backup_dir = '/home/josh/minecraft_backup'
-#scp_server = 'josh@thepronserver'
-#scp_server_target = '/backup/minecraft'
+server_defaults = {"session_name": "troydoesntknow",
+"minecraft_dir": "/home/minecraft/minecraft",
+"server_jar": "vanilla.jar",
+"backup_dir": "/tmp",
+"mapper": "overviewer",
+"memory_min": "512",
+"memory_max": "1024",
+"java_args": "-XX:+AggressiveOpts",
+"debug": "False",}
 
 
 # Custom exceptions
@@ -53,64 +50,83 @@ class NotBukkitException(MinecraftException):
 
 
 class RedstoneServer:
-    def __init__(self, config_file=None, minecraft_dir=None, session_name=None, server_jar=None, backup_dir=None, mapper=None):
-        """ Create a new server wrapper.
-        If config_file is None, default config file will be created, first
-        in minecraft_dir (if not None), or current dir if None. Otherwise,
-        values are read in. If other args are not None, the config file will
-        be updated.
-        minecraft_dir: The default dir containing the server jar
-        session_name: The session name for Tmux or Screen
-        server_jar: The filename of the server jar (vanilla.jar or bukkit.jar)
-        backup_dir: The dir where backup tars and maps will be saved to
-        mapper: Name of mapping software. Choose from overviewer or mcmaps
+    def __init__(self, config_file):
+        """ Create a new server wrapper based on config_file
+        Config file must be specified. The required variables are
+        minecraft_dir and server_jar. The rest are optional and
+        will be set to defaults if not specified.
         """
-        # Try to find config file
-        write_config = False
-        if config_file is None:
-            if minecraft_dir is None or session_name is None or server_jar is None:
-                raise SyntaxError("You must specify either config_file, or all of minecraft_dir, session_name, and server_jar.")
-            if minecraft_dir is not None:
-                if os.path.exists(os.path.join(minecraft_dir, 'pyredstone.cfg')):
-                    config_file = os.path.join(minecraft_dir, 'pyredstone.cfg')
-                else:
-                    config_file = 'pyredstone.cfg'
-                    write_config = True
-        else:
-            logger.info('Asking configurator for config from %s' % config_file)
-            config = configurator.get_config(config_file)
-        # Set variables that might not get set to defaults
-        self.backup_dir = '/tmp'
-        self.mapper = 'overviewer'
-        # Load config file and
-        if os.path.exists(config_file):
+        if not os.path.exists(config_file):
+            raise SyntaxError("Could not find config file. Cannot continue.")
+        logger.info('Asking configurator for config from %s' % config_file)
+        config = configurator.get_config(config_file)
+
+        # Check for required bits of config.
+        if 'minecraft_dir' not in config or 'server_jar' not in config:
+            raise SyntaxError("Config file must specify minecraft_dir and server_jar")
+        # Check that minecraft_dir does exist. If not, try to make.
+        if not os.path.exists(config['minecraft_dir']):
+            try:
+                os.mkdir(config['minecraft_dir'])
+            except EnvironmentError as e:
+                logger.exception("Could not create minecraft_dir %s" % config['minecraft_dir'])
+                raise SyntaxError("Could not create minecraft_dir %s" % config['minecraft_dir'])
+        # Check that the server_jar is in the minecraft_dir. Otherwise, install! (Fail until install ready..)
+        if not os.path.exists(os.path.join(config['minecraft_dir'], config['server_jar'])):
+            logger.error("server_jar %s is not in minecraft_dir %s. Cannot continue." % (config['server_jar'], config['minecraft_dir']))
+            raise SyntaxError("server_jar %s is not in minecraft_dir %s. Cannot continue." % (config['server_jar'], config['minecraft_dir']))
+        # Set class attributes either from config or defaults if config doesn't have them.
+        for key, value in server_defaults.items():
+            if key not in config:
+                logger.debug("Setting %s: %s" % (key, value))
+                setattr(self, key, value)
+            else:
+                logger.debug("Setting %s: %s" % (key, config[key]))
+                setattr(self, key, config[key])
+        #if config_file is None:
+            #if minecraft_dir is None or session_name is None or server_jar is None:
+                #raise SyntaxError("You must specify either config_file, or all of minecraft_dir, session_name, and server_jar.")
+            #if minecraft_dir is not None:
+                #if os.path.exists(os.path.join(minecraft_dir, 'pyredstone.cfg')):
+                    #config_file = os.path.join(minecraft_dir, 'pyredstone.cfg')
+                #else:
+                    #config_file = 'pyredstone.cfg'
+                    #write_config = True
+        #else:
+            #logger.info('Asking configurator for config from %s' % config_file)
             #config = configurator.get_config(config_file)
-            self.minecraft_dir = config['minecraft_dir']
-            self.session_name = config['session_name']
-            self.server_jar = config['server_jar']
-            if 'backup_dir' in config:
-                self.backup_dir = config['backup_dir']
-            if 'mapper' in config:
-                self.mapper = config['mapper']
-        # Overwrite config is provided
-        if minecraft_dir is not None:
-            self.minecraft_dir = minecraft_dir
-        if session_name is not None:
-            self.session_name = session_name
-        if server_jar is not None:
-            self.server_jar = server_jar
-        if backup_dir is not None:
-            self.backup_dir = backup_dir
-        if mapper is not None:
-            self.mapper = mapper
-        # Write the config back to the config file
-        if write_config == True:
-            config['minecraft_dir'] = self.minecraft_dir
-            config['session_name'] = self.session_name
-            config['server_jar'] = self.server_jar
-            config['backup_dir'] = self.backup_dir
-            config['mapper'] = self.mapper
-            configurator.write_config(config_file, config)
+        ## Set variables that might not get set to defaults
+        #self.backup_dir = '/tmp'
+        #self.mapper = 'overviewer'
+        ## Load config file and
+        #if os.path.exists(config_file):
+            ##config = configurator.get_config(config_file)
+            #self.minecraft_dir = config['minecraft_dir']
+            #self.session_name = config['session_name']
+            #self.server_jar = config['server_jar']
+            #if 'backup_dir' in config:
+                #self.backup_dir = config['backup_dir']
+            #if 'mapper' in config:
+                #self.mapper = config['mapper']
+        ## Overwrite config is provided
+        #if minecraft_dir is not None:
+            #self.minecraft_dir = minecraft_dir
+        #if session_name is not None:
+            #self.session_name = session_name
+        #if server_jar is not None:
+            #self.server_jar = server_jar
+        #if backup_dir is not None:
+            #self.backup_dir = backup_dir
+        #if mapper is not None:
+            #self.mapper = mapper
+        ## Write the config back to the config file
+        #if write_config == True:
+            #config['minecraft_dir'] = self.minecraft_dir
+            #config['session_name'] = self.session_name
+            #config['server_jar'] = self.server_jar
+            #config['backup_dir'] = self.backup_dir
+            #config['mapper'] = self.mapper
+            #configurator.write_config(config_file, config)
 
     ###
     # Convenience functions
@@ -183,7 +199,8 @@ class RedstoneServer:
             #logging.exception("Command call error")
             raise MinecraftCommandException("Command '%s' failed with exit code: %d" % (cmd, e.returncode))
         #print "Minecraft started in tmux session %s" % self.session_name
-        return True
+        logger.info("Server started successfully.")
+        return
 
     def server_stop(self, quick=False, msg=None):
         """ Stops the server, optionally giving warning messages.
@@ -208,6 +225,7 @@ class RedstoneServer:
             cmd = self.console_cmd("say Server going down in 15 seconds")
             time.sleep(15)
         self.console_cmd("stop")
+        self.info("Server successfully stopped.")
 
     def server_restart(self, quick=False, msg=None):
         """ Restarts the server, optionally giving warning messages.
@@ -220,7 +238,6 @@ class RedstoneServer:
             while self.status():
                 time.sleep(1)
         self.server_start()
-        return self.status()
 
     def status(self):
         """ Checks whether the Minecraft server is running.
