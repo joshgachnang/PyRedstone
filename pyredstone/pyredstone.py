@@ -35,12 +35,12 @@ _version = '0.0.2'
 # Custom exceptions
 # Messages logged here will likely be shown in
 class MinecraftException(Exception):
-    def __init__(self, msg, code):
+    def __init__(self, msg,):
         self.msg = msg
-        self.code = code
+        #self.code = code
 
     def __str__(self):
-        return "%d: %s" % (self.code, self.msg)
+        return "%d: %s" % (self.msg)
 
 
 class MinecraftCommandException(MinecraftException):
@@ -49,7 +49,7 @@ class MinecraftCommandException(MinecraftException):
 
 class NotBukkitException(MinecraftException):
     def __init__(self, message):
-        super(NotBukkitException, self).__init__(message, 0)
+        super(NotBukkitException, self).__init__(message,)
 
 
 class RedstoneServer:
