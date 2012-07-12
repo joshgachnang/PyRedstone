@@ -613,7 +613,7 @@ class RedstoneServer:
         except ValueError as e:
             logger.error(("Got unknown value for set_default_gamemode. Needs to be an int or able to be cast as an int.")
             raise MinecraftException("Got unknown value for set_default_gamemode. Needs to be an int or able to be cast as an int.")
-        if gamemode not in [0, 1, 2, 'creative', 'survival', 'adventure']:
+        if gamemode not in [0, 1, 2, '0', '1', '2', 'creative', 'survival', 'adventure']:
             logger.error("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
             raise MinecraftException("Tried setting default gamemode to unacceptabled gamemode %s." % (str(gamemode),))
         self.console_cmd("defaultgamemode %s" % (str(gamemode)))
@@ -940,7 +940,8 @@ class RedstoneServer:
         (creative) for gamemode, or 2 (adventure) for gamemode. Fails silently
         if the player is not connected.
         """
-        if gamemode not in [0, 1, 2, 'creative', 'survival', 'adventure']:
+
+        if gamemode not in [0, 1, 2, '0', '1', '2', 'creative', 'survival', 'adventure']:
             logger.error("Tried setting player %s gamemode to unacceptabled gamemode %s." % (player, str(gamemode),))
             raise MinecraftException("Tried setting player %s gamemode to unacceptabled gamemode %s." % (player, str(gamemode),))
         self.console_cmd("gamemode %s %s" % (player, str(gamemode)))
