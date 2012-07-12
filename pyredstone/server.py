@@ -136,14 +136,14 @@ if __name__ == "__main__":
         try:
             os.mkdir('/var/run/pyredstone/')
         except EnvironmentError as e:
-            logger.error("Run directory /var/run/pyredstone/ does not exist and cannot be created.")
+            logger.error("Run directory /var/run/pyredstone/ does not exist and cannot be created. Try running 'sudo mkdir /var/run/pyredstone/'.")
             sys.exit(1)
     # Try writing to directory.
     try:
         open('/var/run/pyredstone/test', 'w')
         os.rm('/var/run/pyredstone/test')
     except EnvironmentError as e:
-        logger.error("Could not write to run directory /var/run/pyredstone.")
+        logger.error("Could not write to run directory /var/run/pyredstone. Try running 'sudo chown -R YOUR_USERNAME /var/run/pyredstone/'.")
         sys.exit(2)
     import argparse
     parser = argparse.ArgumentParser(description="Creates a remote HTTP/JSON API for the PyRedstone wrapper around a Minecraft Server.")
