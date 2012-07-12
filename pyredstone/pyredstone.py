@@ -173,8 +173,14 @@ class RedstoneServer:
             #print "Server already running in tmux session %s" % self.session_name
             return False
         cmd = 'tmux new -d -s %s "cd %s; java -Xms1524M -Xmx1524M -jar %s nogui"' % (self.session_name, self.minecraft_dir, self.server_jar)
-        self._call(cmd)
-        time.sleep(5)
+        # Cannot use normal call command. Check output fails with tmux creation.
+        try:
+            subprocess.call(cmd, shell=True)
+        except subprocess.CalledProcessError as e:
+            #print e.returncode, e.output
+            #logger = logging.getLogger('pyredstone')
+            #logging.exception("Command call error")
+            raise MinecraftCommandException("Command '%s' failed with exit code: %d" % (cmd, e.returncode))
         #print "Minecraft started in tmux session %s" % self.session_name
         return True
 
@@ -210,6 +216,8 @@ class RedstoneServer:
 
         if self.status():
             self.server_stop(quick, msg=msg)
+            while self.status():
+                time.sleep(1)
         self.server_start()
         return self.status()
 
