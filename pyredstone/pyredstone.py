@@ -479,7 +479,7 @@ class RedstoneServer:
     def start_weather(self):
         """ Starts a downfall in the server. Fails silently if already
         downfalling. """
-        if is_raining():
+        if self.is_raining():
             logger.warning("Tried to start weather, but already in the middle of a downfall.")
         else:
             self.console_cmd("toggledownfall")
@@ -487,7 +487,7 @@ class RedstoneServer:
     def stop_weather(self):
         """ Stops a downfall in the server. Fails silently if already
         stopped. """
-        if not is_raining():
+        if not self.is_raining():
             logger.warning("Tried to stop weather, but downfall is already stopped.")
         else:
             self.console_cmd("toggledownfall")
