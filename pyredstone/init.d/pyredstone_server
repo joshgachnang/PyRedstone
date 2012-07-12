@@ -17,6 +17,7 @@
 # Variables
 USERNAME="minecraft"
 SERVICE={service}
+CONFIG=/home/$USERNAME/minecraft/pyredstone.cfg
 
 ME=$(whoami)
 as_user() {
@@ -34,7 +35,7 @@ start() {
 	if [ ! -d /var/run/pyredstone/ ]; then
 		mkdir /var/run/pyredstone
 	fi
-	server.py
+	python server.py --config $CONFIG
 }
 stop() {
 	if [ -f /var/run/pyredstone/server.pid ]; then
@@ -67,7 +68,7 @@ case "$1" in
     status
     ;;
   *)
-  echo "Usage: $0 {start|stop|status|restart|\"server command\"}"
+  echo "Usage: $0 {start|stop|status|restart}"
   exit 1
   ;;
 esac

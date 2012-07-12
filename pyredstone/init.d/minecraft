@@ -17,6 +17,7 @@
 # Variables
 USERNAME="minecraft"
 SERVICE={service}
+CONFIG=/home/$USERNAME/minecraft/pyredstone.cfg
 
 ME=$(whoami)
 as_user() {
@@ -27,27 +28,27 @@ as_user() {
   fi
 }
 mc_start() {
-    as_user "pyredstone.py server_start"
+    as_user "pyredstone.py --config $CONFIG server_start"
 }
 
 mc_stop() {
-    as_user "pyredstone.py server_stop"
+    as_user "pyredstone.py --config $CONFIG server_stop"
 }
 
 mc_backup() {
-    pyredstone.py backup
+    as_user "pyredstone.py --config $CONFIG backup"
 }
 
 mc_update() {
-    pyredstone.py update
+    as_user "pyredstone.py --config $CONFIG update"
 }
 
 mc_command() {
-    pyredstone.py console_cmd $1
+    as_user "pyredstone.py --config $CONFIG console_cmd $1"
 }
 
 mc_status() {
-    pyredstone.py status
+    as_user "pyredstone.py --config $CONFIG status"
 }
 #Start-Stop here
 case "$1" in
