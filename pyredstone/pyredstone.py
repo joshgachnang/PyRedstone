@@ -266,15 +266,21 @@ class RedstoneServer:
         elif self.server_jar == 'craftbukkit.jar' or self.server_jar == 'bukkit.jar':
             jar = 'bukkit'
         else:
+            logger.error("server_jar is an unsupported version. Expect \
+            'vanilla.jar', 'minecraft_server.jar', ''craftbukkit.jar', or \
+            'bukkit.jar'. Got %s." % (self.server_jar))
             raise SyntaxError("server_jar is an unsupported version. Expect \
             'vanilla.jar', 'minecraft_server.jar', ''craftbukkit.jar', or \
             'bukkit.jar'. Got %s." % (self.server_jar))
 
         if self.stable_releases == "True":
             stable = True
+            logger.info("Starting update for server type: %s - Stable" % (jar,))
         elif self.stable_releases == "False":
             stable = False
+            logger.info("Starting update for server type: %s - Unstable" % (jar,))
         else:
+            logger.error("Stable releases must be either 'True' or 'False'. Got %s." % (self.stable_releases))
             raise SyntaxError("Stable releases must be either 'True' or 'False'. Got %s." % (self.stable_releases))
 
         # Find the existing version from the versions file in the minecraft_dir
@@ -290,6 +296,7 @@ class RedstoneServer:
         else:
             # No version file, just download new version.
             current_version = None
+        logger.info("Current version is %s" % (current_version,))
 
         # Get the link to the newest version.
         if jar == 'vanilla':
@@ -304,28 +311,40 @@ class RedstoneServer:
                 return
             latest_version = ret['download_link']
 
+        logger.info("New version download link: %s" % (latest_version))
         # Create a temp folder
         random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(16))
         try:
             os.mkdir(os.path.join('/tmp', random_string))
         except EnvironmentError as e:
+            logger.error("Cannot create temporary folder %s" % (os.path.join('/tmp', random_string)))
             raise OSError("Cannot create temporary folder %s" % (os.path.join('/tmp', random_string)))
+        logger.info("Created temp directory %s" % (os.path.join('/tmp', random_string),))
 
         # Download the file to the temp folder
         self.download_file(latest_version, os.path.join('/tmp', random_string, self.server_jar))
+        if os.path.exists(os.path.join('/tmp', random_string, self.server_jar)):
+            logger.info("Downloaded file to %s" % os.path.join('/tmp', random_string, self.server_jar))
+        else:
+            logger.error("Download from %s to %s failed." % (latest_version, os.path.join('/tmp', random_string, self.server_jar)))
+            raise OSError("Download from %s to %s failed." % (latest_version, os.path.join('/tmp', random_string, self.server_jar)))
 
         # Backup the existing server_jar to server_jar.bak
         if os.path.exists(os.path.join(self.minecraft_dir, self.server_jar)):
             try:
                 shutil.move(os.path.join(self.minecraft_dir, self.server_jar), os.path.join(self.minecraft_dir, self.server_jar + '.bak'))
             except shutil.Error as e:
+                logger.error("Could not move old server_jar %s" % (os.path.join(self.minecraft_dir, self.server_jar)))
                 raise OSError("Could not move old server_jar %s" % (os.path.join(self.minecraft_dir, self.server_jar)))
+        logger.info("Backed up exist jar %s to %s." % (os.path.join(self.minecraft_dir, self.server_jar), os.path.join(self.minecraft_dir, self.server_jar)))
 
         # Move the new server_jar from the temp folder to the minecraft_dir
         try:
             shutil.move(os.path.join('/tmp', random_string, self.server_jar), os.path.join(self.minecraft_dir, self.server_jar))
         except shutil.Error as e:
+            logger.error("Could not move new server_jar %s to replace old server_jar %s" %(os.path.join()))
             raise OSError("Could not move new server_jar %s to replace old server_jar %s" %(os.path.join()))
+        logger.info("Moved new jar to %s. Restart server to complete update." % (os.path.join(self.minecraft_dir, self.server_jar),))
     ###
     # Server Settings
     ###
