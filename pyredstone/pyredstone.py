@@ -14,6 +14,8 @@ import nbt
 import configurator
 import filecmp
 from magplus.magplus import MinecraftAssetsGetter
+import random
+import string
 
 
 # Config with logging config file
@@ -277,7 +279,7 @@ class RedstoneServer:
 
         # Find the existing version from the versions file in the minecraft_dir
         versions_file = os.path.join(self.minecraft_dir, 'version.txt')
-        if os.path.exists(version_file):
+        if os.path.exists(versions_file):
             # Version file exists, we can proceed with comparison.
             try:
                 with open(versions_file, 'r') as f:
@@ -294,6 +296,7 @@ class RedstoneServer:
             ret = mag.getNewerVanillaVersion(current_version, stable)
             if ret is None:
                 return
+            logger.debug(ret)
             latest_version = mag.getVanillaServerUrl(ret['version'])
         else:
             ret = mag.getNewerBukkitVersion(current_version, stable)
@@ -314,7 +317,7 @@ class RedstoneServer:
         # Backup the existing server_jar to server_jar.bak
         if os.path.exists(os.path.join(self.minecraft_dir, self.server_jar)):
             try:
-                shutil.move(os.path.join(self.minecraft_dir, self.server_jar), os.path.join(self.minecraft_dir, self.server_jar, '.bak'))
+                shutil.move(os.path.join(self.minecraft_dir, self.server_jar), os.path.join(self.minecraft_dir, self.server_jar + '.bak'))
             except shutil.Error as e:
                 raise OSError("Could not move old server_jar %s" % (os.path.join(self.minecraft_dir, self.server_jar)))
 
