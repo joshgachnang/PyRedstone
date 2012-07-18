@@ -221,7 +221,7 @@ class RedstoneServer:
             cmd = self.console_cmd("say Server going down in 15 seconds")
             time.sleep(15)
         self.console_cmd("stop")
-        self.info("Server successfully stopped.")
+        logger.info("Server successfully stopped.")
 
     def server_restart(self, quick=False, msg=None):
         """ Restarts the server, optionally giving warning messages.
@@ -828,7 +828,7 @@ class RedstoneServer:
                     else:
                         ops.append(user)
             return ops
-        logging.error("Could not find an ops file at %s/ops.txt" % self.minecraft_dir)
+        logger.error("Could not find an ops file at %s/ops.txt" % self.minecraft_dir)
         raise MinecraftException("Could not find an ops file at %s/ops.txt" % self.minecraft_dir)
 
     def get_whitelist(self):
@@ -1107,7 +1107,7 @@ class RedstoneServer:
         player is not connected.
         """
         if player not in self.get_players():
-            logging.info("Tried to whisper to player %s, who is not currently connected." % (player))
+            logger.info("Tried to whisper to player %s, who is not currently connected." % (player))
         self.console_cmd("tell %s %s" % (player, message))
 
 if __name__ == '__main__':
