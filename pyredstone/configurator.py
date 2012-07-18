@@ -35,10 +35,10 @@ def get_config(config_file=None, server=None):
     # Now we have a config file and a section.
     data = {}
     try:
-        data['session_name'] = config.get(server, 'session_name')
-        data['minecraft_dir'] = config.get(server, 'minecraft_dir')
-        data['server_jar'] = config.get(server, 'server_jar')
-        data['backup_dir'] = config.get(server, 'backup_dir')
+        # Take each item in the config file section and dump into a dict
+        for item in config.items(server):
+            data[item[0]] = item[1]
+        logger.info("Config data: %s" % str(data))
     except ConfigParser.Error as e:
         raise SyntaxError("Config file is improperly formated")
     return data

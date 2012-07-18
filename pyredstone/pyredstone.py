@@ -89,7 +89,7 @@ class RedstoneServer:
         # Set class attributes either from config or defaults if config doesn't have them.
         for key, value in server_defaults.items():
             if key not in config:
-                logger.debug("Setting %s: %s" % (key, value))
+                logger.debug("Setting %s to default: %s" % (key, value))
                 setattr(self, key, value)
             else:
                 logger.debug("Setting %s: %s" % (key, config[key]))
@@ -165,6 +165,11 @@ class RedstoneServer:
             print status,
 
         f.close()
+
+    def test(self):
+        """ Here just for testing config and such. """
+        pass
+
     ###
     # Server commands
     ###
