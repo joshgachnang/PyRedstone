@@ -1,1 +1,2 @@
+v0.1.2, 07/15.2012 -- Adding ability to update.
 v0.0.2, 07/10/2012 -- Initial release.

@@ -21,6 +21,8 @@ PyRedstone also relies on the following Python packages:
 
 * nbt
 
+* MAGPlus
+
 pyredstone.py
 =============
 PyRedstone can be run from the commandline like so::
@@ -59,6 +61,7 @@ The config file is a standard, INI style config file. An example is included cal
     memory_max = 1024
     java_args = -XX:+AggressiveOpts
     debug = False
+    stable_releases = False
 
 The variables are:
 

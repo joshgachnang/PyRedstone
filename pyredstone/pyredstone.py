@@ -12,11 +12,18 @@ import logging.config
 import logconfig
 import nbt
 import configurator
+import filecmp
+from magplus.magplus import MinecraftAssetsGetter
+
 
 # Config with logging config file
 logging.config.dictConfig(logconfig.LOGGING)
 logger = logging.getLogger('pyredstone')
 _version = '0.0.2'
+
+now = datetime.datetime.now()
+year = now.strftime("%y")
+week = now.strftime("%U")
 
 server_defaults = {"session_name": "troydoesntknow",
 "minecraft_dir": "/home/minecraft/minecraft",
@@ -27,7 +34,7 @@ server_defaults = {"session_name": "troydoesntknow",
 "memory_max": "1024",
 "java_args": "-XX:+AggressiveOpts",
 "debug": "False",
-"prerelease": "False",
+"stable_releases": "False",
 }
 
 
@@ -243,65 +250,79 @@ class RedstoneServer:
             return False
 
     def update(self):
-        """ Download a new copy of the server software, compare the checksum,
-        and if different, replace the server. Supports latest vanilla,
-        vanilla prerelease, and latest bukkit.
+        """ Find latest version of server, compare to latest released version,
+        if there is a newer version, download and replace. If no version
+        number can be found, download the latest.
         """
         # Choose between vanilla and bukkit
         download_list = []
+        mag = MinecraftAssetsGetter()
+        # Determine Jar type
         if self.server_jar == 'vanilla.jar' or self.server_jar == 'minecraft_server.jar':
-            # Choose between latest and snapshot
-            now = datetime.datetime.now()
-            year = now.strftime("%y")
-            week = now.strftime("%U")
-            print self.prerelease
-            if self.prerelease == "True":
-                print "prerelease.."
-                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week, 'b'))
-                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week, 'a'))
-                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week - 1, 'b'))
-                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week - 1, 'a'))
-                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week - 2, 'b'))
-                download_list.append('http://assets.minecraft.net/%dw%d%s/minecraft_server.jar' % (year, week - 2, 'a'))
-            else:
-                print "not prerelease.."
-                download_list.append('https://s3.amazonaws.com/MinecraftDownload/launcher/minecraft_server.jar')
-        print download_list
-        # Download file
-        for url in download_list:
-            # Check if URL exists or not.
+            jar = 'vanilla'
+
+        elif self.server_jar == 'craftbukkit.jar' or self.server_jar == 'bukkit.jar':
+            jar = 'bukkit'
+        else:
+            raise SyntaxError("server_jar is an unsupported version. Expect \
+            'vanilla.jar', 'minecraft_server.jar', ''craftbukkit.jar', or \
+            'bukkit.jar'. Got %s." % (self.server_jar))
+
+        if self.stable_releases == "True":
+            stable = True
+        elif self.stable_releases == "False":
+            stable = False
+        else:
+            raise SyntaxError("Stable releases must be either 'True' or 'False'. Got %s." % (self.stable_releases))
+
+        # Find the existing version from the versions file in the minecraft_dir
+        versions_file = os.path.join(self.minecraft_dir, 'version.txt')
+        if os.path.exists(version_file):
+            # Version file exists, we can proceed with comparison.
             try:
-                code = urllib2.urlopen(url).getcode()
-                if code != 200:
-                    logger.info("Could not download from %s, got code %d" % (url, code))
-                    continue
-            except urllib2.URLError as e:
-                logger.exception("Problem downloading from %s" % (url,))
-                continue
-            out = os.path.join('/tmp', self.server_jar)
+                with open(versions_file, 'r') as f:
+                    current_version = f.readline()
+            except IOError as e:
+                logger.exception("Could not read version file.")
+                raise IOError("Could not read version file %s" % versions_file)
+        else:
+            # No version file, just download new version.
+            current_version = None
+
+        # Get the link to the newest version.
+        if jar == 'vanilla':
+            ret = mag.getNewerVanillaVersion(current_version, stable)
+            if ret is None:
+                return
+            latest_version = mag.getVanillaServerUrl(ret['version'])
+        else:
+            ret = mag.getNewerBukkitVersion(current_version, stable)
+            if ret is None:
+                return
+            latest_version = ret['download_link']
+
+        # Create a temp folder
+        random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(16))
+        try:
+            os.mkdir(os.path.join('/tmp', random_string))
+        except EnvironmentError as e:
+            raise OSError("Cannot create temporary folder %s" % (os.path.join('/tmp', random_string)))
+
+        # Download the file to the temp folder
+        self.download_file(latest_version, os.path.join('/tmp', random_string, self.server_jar))
+
+        # Backup the existing server_jar to server_jar.bak
+        if os.path.exists(os.path.join(self.minecraft_dir, self.server_jar)):
             try:
-                self.download_file(url, out)
-            except EnvironmentError as e:
-                raise MinecraftException("Could not download file.")
-            except urllib2.URLError as e:
-                logger.exception("Download from %s failed." % (url,))
+                shutil.move(os.path.join(self.minecraft_dir, self.server_jar), os.path.join(self.minecraft_dir, self.server_jar, '.bak'))
+            except shutil.Error as e:
+                raise OSError("Could not move old server_jar %s" % (os.path.join(self.minecraft_dir, self.server_jar)))
 
-            # Make a checksum and compare to server_jar
-
-        u = urllib2.urlopen('http://minecraft.net/download/minecraft_server.jar')
-        f = open('%s/test_update' % self.minecraft_dir, 'w')
-        f.write(u.read())
-        f.close()
-        testfile = file('%s/test_update' % self.minecraft_dir, 'rb')
-        currentfile = file('%s/minecraft_server.jar' % self.minecraft_dir, 'rb')
-
-        if not zlib.adler32(testfile) == zlib.adler(currentfile):
-            server_stop()
-            shutil.move('%s/test_update' % self.minecraft_dir, '%s/minecraft_server' % self.minecraft_dir)
-            server_start()
-            return self.status()
-        return True
-
+        # Move the new server_jar from the temp folder to the minecraft_dir
+        try:
+            shutil.move(os.path.join('/tmp', random_string, self.server_jar), os.path.join(self.minecraft_dir, self.server_jar))
+        except shutil.Error as e:
+            raise OSError("Could not move new server_jar %s to replace old server_jar %s" %(os.path.join()))
     ###
     # Server Settings
     ###

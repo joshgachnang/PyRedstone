@@ -7,3 +7,4 @@ cherrypy.tar.gz
 *u1conflict*
 *output.log
 dist/
+*/.hg/
