@@ -637,7 +637,7 @@ class RedstoneServer:
         return ret_list
 
     def get_player_inventory(self, player):
-        n = NBTFile(os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat'))
+        n = self._get_player_nbt(player)
         #n = NBTFile('/home/josh/Downloads/servercobra.dat')
         inv_list = []
         inv = n["Inventory"]
@@ -655,21 +655,27 @@ class RedstoneServer:
         return inv_list
 
     def get_player_location(self, player):
-        n = NBTFile(os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat'))
+        n = self._get_player_nbt(player)
         loc_list = n["Pos"]
         return (loc_list[0], loc_list[1], loc_list[2])
 
     def get_player_spawn(self, player):
-        n = NBTFile(os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat'))
+        n = self._get_player_nbt(player)
         return (n["SpawnX"], n["SpawnY"], n["SpawnZ"])
 
     def get_player_health(self, player):
-        n = NBTFile(os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat'))
+        n = self._get_player_nbt(player)
         return n["Health"]
 
     def get_player_xp(self, player):
-        n = NBTFile(os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat'))
+        n = self._get_player_nbt(player)
         return n["XpLevel"]
+
+    def _get_player_nbt(self, player):
+        nbt_file = os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat')
+        if not os.path.exists(nbt_file):
+            raise MinecraftException("Could not find player file for player: %s" % player)
+        return NBTFile(nbt_file)
 
     def delete_player_item(self, player, slot):
         """ Will delete everything in the given slot from the player's inventory. """
