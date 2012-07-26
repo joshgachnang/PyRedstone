@@ -145,7 +145,7 @@ class Root:
                 # Try to get the function from pyredstone module. Then pass the arg list.
                 try:
                     methodToCall = getattr(redstone, action)
-                    if args is None:
+                    if args is None or args == "":
                         result = methodToCall()
                     else:
                         result = methodToCall(**args)
