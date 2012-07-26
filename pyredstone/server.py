@@ -89,26 +89,31 @@ class Root:
     def batch(self):
         """ Responds with JSON of the form {"action": "result", "other_action": "other_result"} """
         response = {}
+        logger.debug("Starting batch request")
         if hasattr(cherrypy.request, "json"):
             #logger.error("json", str(cherrypy.request.json), type(cherrypy.request.json), ast.literal_eval(str(cherrypy.request.json)))
             data_in = ast.literal_eval(str(cherrypy.request.json))
             if "username" not in data_in or "auth_token" not in data_in:
                 logger.error("Username and/or auth_token not provided.")
                 raise cherrypy.HTTPError(403, "Username and/or auth_token not provided.")
+            logger.debug("Username: %s, auth_token: %s." % (data_in['username'], data_in['auth_token']))
             if not self.client_authenticate(data_in["username"], data_in["auth_token"]):
                 logger.error("Username and/or auth_token incorrect.")
                 raise cherrypy.HTTPError(403, "Username and/or auth_token incorrect.")
+            logger.debug("username/auth_token authenticated correctly.")
             if "config_file" not in data_in:
                 logger.error("Config file required!")
                 raise cherrypy.HTTPError(403, "Config file required.")
             if not os.path.exists(config_file):
                 logger.error("Config file does not exist: %s" % config_file)
                 raise cherrypy.HTTPError(403, "Config file does not exist: %s" % config_file)
+            logger.debug("config_file: %s" % config_file)
             try:
                 redstone = pyredstone.RedstoneServer(config_file)
             except SyntaxError as e:
                 logger.exception("Could not create the redstone server with config file %s." % config_file)
                 raise cherrypy.HTTPError(403, "Could not create redstone server with config file %s." % config_file)
+            logger.debug("RedstoneServer created.")
             if "action_list" not in data_in:
                 logger.error("Batch requests require an action_list.")
                 raise cherrypy.HTTPError(400, "Batch requests require an action_list.")
