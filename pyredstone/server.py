@@ -123,6 +123,9 @@ class Root:
             for items in data_in["action_list"].items():
                 #logger.error(action, action[action])
                 # Check that each action has a command and optional arg list
+                if len(items) < 2:
+                    logger.error("Improperly formed action list. %s" % items)
+                    raise cherrypy.HTTPError(400, "Improperly formed action list. %s" % items)
                 if "action" not in items[1]:
                     logger.error("Each item in action_list needs an action.")
                     raise cherrypy.HTTPError(400, "Each item in action_list needs an action.")
