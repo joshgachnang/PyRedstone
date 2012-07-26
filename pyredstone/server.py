@@ -122,7 +122,7 @@ class Root:
             logger.debug("Found action_list: %s" % data_in["action_list"])
             #PROBLEM STARTS HERE!!!!!!!!!!!!!!!!!
             for items in data_in["action_list"].items():
-                logger.error("Items: %s" % items)
+                print "Items: ", items
                 # Check that each action has a command and optional arg list
                 if len(items) < 2:
                     logger.error("Improperly formed action list. %s" % items)
