@@ -197,5 +197,8 @@ if __name__ == "__main__":
     PIDFile(cherrypy.engine, '/var/run/pyredstone/server.pid').subscribe()
     cherrypy.config.update({"server.socket_host": "0.0.0.0",
                             "server.socket_port": 7777,
+                            "log.error_file": "cherrypy.log",
+                            "log.access_file": "cherrypy.access",
+                            "log.screen_file": "cherrypy.screen",
                             })
     cherrypy.quickstart(Root())
