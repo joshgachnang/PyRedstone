@@ -126,13 +126,15 @@ class Root:
                 if "action" not in items[1]:
                     logger.error("Each item in action_list needs an action.")
                     raise cherrypy.HTTPError(400, "Each item in action_list needs an action.")
+                logger.debug("Processing action %s" % data_in["action"])
                 action = items[1]["action"]
                 if "args" not in items[1]:
                     args = None
-                elif "args" == {}:
+                elif "args" == "":
                     args = None
                 else:
                     args = items[1]["args"]
+                logger.debug("Args for action %s are %s" % (action, args))
                 if action in prohibited_actions:
                     logger.error("Action %s prohibited" % action)
                     raise cherrypy.HTTPError(405, "Action %s prohibited" % action)
