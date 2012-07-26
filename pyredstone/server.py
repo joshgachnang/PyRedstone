@@ -119,6 +119,7 @@ class Root:
                 logger.error("Batch requests require an action_list.")
                 raise cherrypy.HTTPError(400, "Batch requests require an action_list.")
             # Process each action in action_list
+            logger.debug("Found action_list: %s" % data_in["action_list"])
             for items in data_in["action_list"].items():
                 #logger.error(action, action[action])
                 # Check that each action has a command and optional arg list
