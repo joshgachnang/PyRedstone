@@ -104,10 +104,11 @@ class Root:
             if "config_file" not in data_in:
                 logger.error("Config file required!")
                 raise cherrypy.HTTPError(403, "Config file required.")
-            if not os.path.exists(config_file):
+            logger.debug("Found config file. Ensuring it exists..")
+            if not os.path.exists(data_in['config_file']):
                 logger.error("Config file does not exist: %s" % config_file)
                 raise cherrypy.HTTPError(403, "Config file does not exist: %s" % config_file)
-            logger.debug("config_file: %s" % config_file)
+            logger.debug("config_file exists: %s" % config_file)
             try:
                 redstone = pyredstone.RedstoneServer(config_file)
             except SyntaxError as e:
