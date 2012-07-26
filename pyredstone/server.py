@@ -33,6 +33,17 @@ class Root:
             if not self.client_authenticate(data_in["username"], data_in["auth_token"]):
                 logger.error("Username and/or auth_token incorrect.")
                 raise cherrypy.HTTPError(403, "Username and/or auth_token incorrect.")
+            if "config_file" not in data_in:
+                logger.error("Config file required!")
+                raise cherrypy.HTTPError(403, "Config file required.")
+            if not os.path.exists(config_file):
+                logger.error("Config file does not exist: %s" % config_file)
+                raise cherrypy.HTTPError(403, "Config file does not exist: %s" % config_file)
+            try:
+                redstone = pyredstone.RedstoneServer(config_file)
+            except SyntaxError as e:
+                logger.exception("Could not create the redstone server with config file %s." % config_file)
+                raise cherrypy.HTTPError(403, "Could not create redstone server with config file %s." % config_file)
             if "action" not in data_in:
                 logger.error("Requests require an action.")
                 raise cherrypy.HTTPError(400, "Requests require an action.")
@@ -50,7 +61,7 @@ class Root:
             # Try to get the function from the RedstoneServer. Then pass the arg list.
             try:
                 logger.info("Attempting to call RedstoneServer function %s." % (data_in["action"]))
-                methodToCall = getattr(rs, data_in["action"])
+                methodToCall = getattr(redstone, data_in["action"])
                 if args is None:
                     result = methodToCall()
                 else:
@@ -87,6 +98,17 @@ class Root:
             if not self.client_authenticate(data_in["username"], data_in["auth_token"]):
                 logger.error("Username and/or auth_token incorrect.")
                 raise cherrypy.HTTPError(403, "Username and/or auth_token incorrect.")
+            if "config_file" not in data_in:
+                logger.error("Config file required!")
+                raise cherrypy.HTTPError(403, "Config file required.")
+            if not os.path.exists(config_file):
+                logger.error("Config file does not exist: %s" % config_file)
+                raise cherrypy.HTTPError(403, "Config file does not exist: %s" % config_file)
+            try:
+                redstone = pyredstone.RedstoneServer(config_file)
+            except SyntaxError as e:
+                logger.exception("Could not create the redstone server with config file %s." % config_file)
+                raise cherrypy.HTTPError(403, "Could not create redstone server with config file %s." % config_file)
             if "action_list" not in data_in:
                 logger.error("Batch requests require an action_list.")
                 raise cherrypy.HTTPError(400, "Batch requests require an action_list.")
@@ -109,7 +131,7 @@ class Root:
                     raise cherrypy.HTTPError(405, "Action %s prohibited" % action)
                 # Try to get the function from pyredstone module. Then pass the arg list.
                 try:
-                    methodToCall = getattr(pyredstone, action)
+                    methodToCall = getattr(redstone, action)
                     if args is None:
                         result = methodToCall()
                     else:

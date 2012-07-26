@@ -59,7 +59,7 @@ class Repeater():
 
     def batch(self, get_list):
         """ Takes a list of tuples as get_list. The tuples should be of the form ("command", {arglist})
-        The JSON will look like: {"username": username, "auth_token": auth_token, "command": {"command", {arglist}}}
+        The JSON will look like: {"username": username, "auth_token": auth_token, "config_path": config_path, "command": {"command", {arglist}}}
         """
         print "starting batch"
         jdata = {}
@@ -67,11 +67,9 @@ class Repeater():
         jdata["auth_token"] = self.auth_token
         jdata["action_list"] = {}
 
-        for item in get_list:
-            action = item[0]
-            args = item[1]
+        for action,args in get_list.items():
             jdata["action_list"][action] = {"action": action, "args": args}
-
+        print jdata["action_list"]
         #print "Jdata is ", json.dumps(jdata)
 
         #print json.loads(json.dumps(jdata))

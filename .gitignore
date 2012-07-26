@@ -48,3 +48,6 @@ pip-log.txt
 #Additional editor
 *~
 *.save
+
+#PyCharm
+.idea/

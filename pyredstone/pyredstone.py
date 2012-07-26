@@ -350,6 +350,22 @@ class RedstoneServer:
             logger.error("Could not move new server_jar %s to replace old server_jar %s" %(os.path.join()))
             raise OSError("Could not move new server_jar %s to replace old server_jar %s" %(os.path.join()))
         logger.info("Moved new jar to %s. Restart server to complete update." % (os.path.join(self.minecraft_dir, self.server_jar),))
+
+    def uptime(self):
+        ''' Returns the time the server host has been running since last reboot. '''
+        return '10000'
+
+    def load(self):
+        ''' Average load on the server. '''
+        return (1.0, 1.0, 1.0)
+
+    def server_memory(self):
+        ''' Returns memory in form: usedMB/totalMB. '''
+        return '500MB/1024MB'
+
+    def server_cpu(self):
+        ''' Returns percent of CPU in use. '''
+        return '90'
     ###
     # Server Settings
     ###
