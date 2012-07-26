@@ -130,7 +130,7 @@ class Root:
                 if "action" not in items[1]:
                     logger.error("Each item in action_list needs an action.")
                     raise cherrypy.HTTPError(400, "Each item in action_list needs an action.")
-                logger.debug("Processing action %s" % data_in["action"])
+                logger.debug("Processing action %s" % items[1])
                 action = items[1]["action"]
                 if "args" not in items[1]:
                     args = None
