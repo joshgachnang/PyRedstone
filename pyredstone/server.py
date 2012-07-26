@@ -106,14 +106,14 @@ class Root:
                 raise cherrypy.HTTPError(403, "Config file required.")
             logger.debug("Found config file. Ensuring it exists..")
             if not os.path.exists(data_in['config_file']):
-                logger.error("Config file does not exist: %s" % config_file)
-                raise cherrypy.HTTPError(403, "Config file does not exist: %s" % config_file)
-            logger.debug("config_file exists: %s" % config_file)
+                logger.error("Config file does not exist: %s" % data_in['config_file'])
+                raise cherrypy.HTTPError(403, "Config file does not exist: %s" % data_in['config_file'])
+            logger.debug("config_file exists: %s" % data_in['config_file'])
             try:
-                redstone = pyredstone.RedstoneServer(config_file)
+                redstone = pyredstone.RedstoneServer(data_in['config_file'])
             except SyntaxError as e:
-                logger.exception("Could not create the redstone server with config file %s." % config_file)
-                raise cherrypy.HTTPError(403, "Could not create redstone server with config file %s." % config_file)
+                logger.exception("Could not create the redstone server with config file %s." % data_in['config_file'])
+                raise cherrypy.HTTPError(403, "Could not create redstone server with config file %s." % data_in['config_file'])
             logger.debug("RedstoneServer created.")
             if "action_list" not in data_in:
                 logger.error("Batch requests require an action_list.")
