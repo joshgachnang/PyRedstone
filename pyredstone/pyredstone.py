@@ -10,7 +10,7 @@ import socket
 import collections
 import logging.config
 import logconfig
-import nbt
+from nbt.nbt import NBTFile
 import configurator
 import filecmp
 from magplus.magplus import MinecraftAssetsGetter
@@ -517,7 +517,7 @@ class RedstoneServer:
         """ Finds the spawn coordinates. Returns a 3tuple of ints in the format
         (X, Y, Z) or None if the coordinates cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
+        n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -527,7 +527,7 @@ class RedstoneServer:
         """ Finds the seed of the server. Returns the seed as a string, or
         None if the seed cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
+        n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -538,7 +538,7 @@ class RedstoneServer:
         thundering, False if not thundering, and None if the thundering state
         cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
+        n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -552,7 +552,7 @@ class RedstoneServer:
         raining, False if not raining, and None if the raining state
         cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
+        n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -565,7 +565,7 @@ class RedstoneServer:
         """ Gets the current in game time. Returns the time as an int between
         0 and 23999, or None if the time cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
+        n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -575,7 +575,7 @@ class RedstoneServer:
         """ Gets the current number of elapsed in game days. Returns the days
         as an int, or None if the days cannot be found.
         """
-        n = nbt.NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
+        n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
         else:
@@ -635,6 +635,45 @@ class RedstoneServer:
                 ret_list.append(player.replace(',', '', 1))
             break
         return ret_list
+
+    def get_player_inventory(self, player):
+        n = NBTFile(os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat'))
+        #n = NBTFile('/home/josh/Downloads/servercobra.dat')
+        inv_list = []
+        inv = n["Inventory"]
+        for item in inv:
+            inv_dict = {}
+            inv_dict['id'] = item['id']
+            inv_dict['count'] = item['count']
+            inv_dict['slot'] = item['slot']
+            if 'ench' in item:
+                inv_dict['enchantments'] = {}
+                for ench in item['ench']:
+                    inv_dict['enchantments']['id'] = ench['id']
+                    inv_dict['enchantments']['level'] = ench['lvl']
+            inv_list.append(inv_dict)
+        return inv_list
+
+    def get_player_location(self, player):
+        n = NBTFile(os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat'))
+        loc_list = n["Pos"]
+        return (loc_list[0], loc_list[1], loc_list[2])
+
+    def get_player_spawn(self, player):
+        n = NBTFile(os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat'))
+        return (n["SpawnX"], n["SpawnY"], n["SpawnZ"])
+
+    def get_player_health(self, player):
+        n = NBTFile(os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat'))
+        return n["Health"]
+
+    def get_player_xp(self, player):
+        n = NBTFile(os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat'))
+        return n["XpLevel"]
+
+    def delete_player_item(self, player, slot):
+        """ Will delete everything in the given slot from the player's inventory. """
+        pass
 
     def get_logs(self, num_lines=-1, log_filter=None, chat_filter=None):
         """ Get a number of lines from the log in reverse order (-1 for all).
