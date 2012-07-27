@@ -661,7 +661,7 @@ class RedstoneServer:
 
     def get_player_spawn(self, player):
         n = self._get_player_nbt(player)
-        return (n["SpawnX"], n["SpawnY"], n["SpawnZ"])
+        return (n["SpawnX"].value, n["SpawnY"].value, n["SpawnZ"].value)
 
     def get_player_health(self, player):
         n = self._get_player_nbt(player)
