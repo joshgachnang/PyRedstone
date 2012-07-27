@@ -147,10 +147,10 @@ class Root:
                     methodToCall = getattr(redstone, action)
                     if args is None or args == "":
                         result = methodToCall()
-                    elif len(args) == 1:
-                        result = methodToCall(args)
-                    else:
+                    elif isinstance(arg, 'dict'):
                         result = methodToCall(**args)
+                    else:
+                        result = methodToCall(args)
                 except AttributeError as e:
                     logger.error("Action %s not found." % action)
                     raise cherrypy.HTTPError(404, "Action %s not found." % action)
