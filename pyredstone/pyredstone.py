@@ -674,11 +674,11 @@ class RedstoneServer:
 
     def get_player_health(self, player):
         n = self._get_player_nbt(player)
-        return n["Health"]
+        return n["Health"].value
 
     def get_player_xp(self, player):
         n = self._get_player_nbt(player)
-        return n["XpLevel"]
+        return n["XpLevel"].value
 
     def _get_player_nbt(self, player):
         nbt_file = os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat')
