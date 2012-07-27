@@ -639,6 +639,7 @@ class RedstoneServer:
     def get_player_inventory(self, player):
         n = self._get_player_nbt(player)
         #n = NBTFile('/home/josh/Downloads/servercobra.dat')
+
         inv_list = []
         inv = n["Inventory"]
         for item in inv:
