@@ -660,8 +660,8 @@ class RedstoneServer:
                 if 'ench' in item['tag']
                     inv_dict['enchantments'] = {}
                     for ench in item['tag']['ench']:
-                        inv_dict['enchantments']['id'] = ench['id']
-                        inv_dict['enchantments']['level'] = ench['lvl']
+                        inv_dict['enchantments']['id'] = ench['id'].value
+                        inv_dict['enchantments']['level'] = ench['lvl'].value
             inv_list.append(inv_dict)
         return inv_list
 
