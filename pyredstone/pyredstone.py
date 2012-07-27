@@ -139,6 +139,7 @@ class RedstoneServer:
         """
         line = line.replace('\x1b[0m', '')
         line = line.replace('\x1b[35m', '')
+        line = line.replace('\x1b[35;1m', '')
         line = line.replace('\x1b[m', '')
         line = line.replace('\n', '')
         return line
