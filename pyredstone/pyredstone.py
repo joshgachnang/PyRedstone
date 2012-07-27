@@ -666,7 +666,7 @@ class RedstoneServer:
     def get_player_location(self, player):
         n = self._get_player_nbt(player)
         loc_list = n["Pos"]
-        return (loc_list[0], loc_list[1], loc_list[2])
+        return (loc_list[0].value, loc_list[1].value, loc_list[2].value)
 
     def get_player_spawn(self, player):
         n = self._get_player_nbt(player)
