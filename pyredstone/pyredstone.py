@@ -714,7 +714,7 @@ class RedstoneServer:
                 l = self._sanitize_log_line(line).split()
                 ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
                 count += 1
-            elif log_filter == 'chat' and "[Server]" in line:
+            elif log_filter == 'chat' and "[Server]" in line and "World backed up!" not in line:
                 l = self._sanitize_log_line(line).split()
                 ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
                 count += 1
