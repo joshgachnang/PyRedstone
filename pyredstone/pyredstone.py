@@ -681,6 +681,7 @@ class RedstoneServer:
         return n["XpLevel"].value
 
     def _get_player_nbt(self, player):
+        self.console_cmd("save-all")
         nbt_file = os.path.join(self.minecraft_dir, self.session_name, 'players', player + '.dat')
         if not os.path.exists(nbt_file):
             raise MinecraftException("Could not find player file for player: %s" % player)
