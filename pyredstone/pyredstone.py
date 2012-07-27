@@ -644,7 +644,8 @@ class RedstoneServer:
         for item in inv:
             inv_dict = {}
             inv_dict['id'] = item['id']
-            inv_dict['count'] = item['count']
+            if 'count' in item:
+                inv_dict['count'] = item['count']
             inv_dict['slot'] = item['slot']
             if 'ench' in item:
                 inv_dict['enchantments'] = {}
