@@ -709,15 +709,15 @@ class RedstoneServer:
         count = 0
         ret_list = []
         for line in reversed(open(logfile).readlines()):
-            if chat_filter == 'chat' and "<" in line and ">" in line and "[INFO]" in line:
+            if log_filter == 'chat' and "<" in line and ">" in line and "[INFO]" in line:
                 l = self._sanitize_log_line(line).split()
                 ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
                 count += 1
-            elif chat_filter == 'chat' and "[Server]" in line:
+            elif log_filter == 'chat' and "[Server]" in line:
                 l = self._sanitize_log_line(line).split()
                 ret_list.append(("chat", l[0], l[1], l[3], " ".join(l[4:])))
                 count += 1
-            elif chat_filter == 'players':
+            elif log_filter == 'players':
                 if "logged in" in line or "logged out" in line or "lost connection" in line:
                     l = self._sanitize_log_line(line).split()
                     if "logged in" in line:
@@ -726,7 +726,7 @@ class RedstoneServer:
                         action = "logged out"
                     ret_list.append(("players", l[0], l[1], l[3], action))
                     count += 1
-            elif chat_filter == None:
+            elif log_filter == None:
                 ret_list.append(("none", self._sanitize_log_line(line)))
                 count += 1
             if num_lines > 0:
