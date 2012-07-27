@@ -644,11 +644,17 @@ class RedstoneServer:
         for item in inv:
             print(item.pretty_tree())
             inv_dict = {}
-            inv_dict['id'] = item['id']
+            inv_dict['id'] = item['id'].value
             if 'count' in item:
-                inv_dict['count'] = item['count']
+                inv_dict['count'] = item['count'].value
+            else:
+                print "No count?"
+                print(item.pretty_tree())
             if 'slot' in item:
-                inv_dict['slot'] = item['slot']
+                inv_dict['slot'] = item['slot'].value
+            else:
+                print "No slot?"
+                print(item.pretty_tree())
             if 'ench' in item:
                 inv_dict['enchantments'] = {}
                 for ench in item['ench']:
