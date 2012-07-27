@@ -647,12 +647,12 @@ class RedstoneServer:
             inv_dict = {}
             inv_dict['id'] = item['id'].value
             if 'count' in item:
-                inv_dict['count'] = item['Count'].value
+                inv_dict['Count'] = item['Count'].value
             else:
                 print "No count?"
                 print(item.pretty_tree())
             if 'slot' in item:
-                inv_dict['slot'] = item['Slot'].value
+                inv_dict['Slot'] = item['Slot'].value
             else:
                 print "No slot?"
                 print(item.pretty_tree())
