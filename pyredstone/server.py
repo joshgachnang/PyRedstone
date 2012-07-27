@@ -147,7 +147,7 @@ class Root:
                     methodToCall = getattr(redstone, action)
                     if args is None or args == "":
                         result = methodToCall()
-                    elif isinstance(args, 'dict'):
+                    elif isinstance(args, dict):
                         result = methodToCall(**args)
                     else:
                         result = methodToCall(args)
