@@ -647,20 +647,21 @@ class RedstoneServer:
             inv_dict = {}
             inv_dict['id'] = item['id'].value
             if 'count' in item:
-                inv_dict['count'] = item['count'].value
+                inv_dict['count'] = item['Count'].value
             else:
                 print "No count?"
                 print(item.pretty_tree())
             if 'slot' in item:
-                inv_dict['slot'] = item['slot'].value
+                inv_dict['slot'] = item['Slot'].value
             else:
                 print "No slot?"
                 print(item.pretty_tree())
-            if 'ench' in item:
-                inv_dict['enchantments'] = {}
-                for ench in item['ench']:
-                    inv_dict['enchantments']['id'] = ench['id']
-                    inv_dict['enchantments']['level'] = ench['lvl']
+            if 'tag' in item:
+                if 'ench' in item['tag']
+                    inv_dict['enchantments'] = {}
+                    for ench in item['tag']['ench']:
+                        inv_dict['enchantments']['id'] = ench['id']
+                        inv_dict['enchantments']['level'] = ench['lvl']
             inv_list.append(inv_dict)
         return inv_list
 
