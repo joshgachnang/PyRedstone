@@ -657,8 +657,8 @@ class RedstoneServer:
                 print "No slot?"
                 print(item.pretty_tree())
             if 'tag' in item:
+                inv_dict['enchantments'] = {}
                 if 'ench' in item['tag']
-                    inv_dict['enchantments'] = {}
                     for ench in item['tag']['ench']:
                         inv_dict['enchantments']['id'] = ench['id'].value
                         inv_dict['enchantments']['level'] = ench['lvl'].value
