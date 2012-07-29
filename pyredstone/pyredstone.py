@@ -637,6 +637,18 @@ class RedstoneServer:
             break
         return ret_list
 
+    def get_player_skin(self, player):
+        """ Get the URL to a player's skin, or None if does not exist.
+        """
+        conn = httplib.HTTPConnection('http://s3.amazonaws.com/MinecraftSkins/%s.png' % player)
+        conn.request('HEAD', path)
+        response = conn.getresponse()
+        conn.close()
+        if response.status == 200:
+            return 'http://s3.amazonaws.com/MinecraftSkins/%s.png' % player
+        else:
+            return None
+
     def get_player_inventory(self, player):
         n = self._get_player_nbt(player)
         #n = NBTFile('/home/josh/Downloads/servercobra.dat')
