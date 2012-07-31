@@ -380,8 +380,8 @@ class RedstoneServer:
         mem_dict['total'] = popen[1].split()[1]
         mem_dict['free'] = popen[1].split()[3]
         mem_dict['used'] = popen[1].split()[2]
-        mem_dict['used-cache'] = popen[2].split()[2]
-        mem_dict['free-cache'] = popen[2].split()[3]
+        mem_dict['used_minus_cache'] = popen[2].split()[2]
+        mem_dict['free_minus_cache'] = popen[2].split()[3]
         return mem_dict
 
     ###
