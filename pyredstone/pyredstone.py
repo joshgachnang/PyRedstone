@@ -354,19 +354,36 @@ class RedstoneServer:
 
     def uptime(self):
         ''' Returns the time the server host has been running since last reboot. '''
-        return '10000'
+        try:
+            with open('/proc/uptime', 'r') as f:
+                uptime_seconds = float(f.readline().split()[0])
+                uptime_string = str(datetime.timedelta(seconds = uptime_seconds))
 
-    def load(self):
+            return uptime_string
+        except EnvironmentError as e:
+            logger.exception("Could not get uptime.")
+            raise MinecraftException("Could not get uptime.")
+
+    def server_load(self):
         ''' Average load on the server. '''
-        return (1.0, 1.0, 1.0)
+        try:
+            return os.getloadavg()
+        except EnvironmentError as e:
+            logger.exception("Could not get load.")
+            raise MinecraftException("Could not get load.")
 
     def server_memory(self):
         ''' Returns memory in form: usedMB/totalMB. '''
-        return '500MB/1024MB'
+        # Get total free
+        mem_dict = {}
+        popen = os.popen("free -m").readlines()
+        mem_dict['total'] = popen[1].split()[1]
+        mem_dict['free'] = popen[1].split()[3]
+        mem_dict['used'] = popen[1].split()[2]
+        mem_dict['used-cache'] = popen[2].split()[2]
+        mem_dict['free-cache'] = popen[2].split()[3]
+        return mem_dict
 
-    def server_cpu(self):
-        ''' Returns percent of CPU in use. '''
-        return '90'
     ###
     # Server Settings
     ###

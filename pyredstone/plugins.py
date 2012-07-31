@@ -25,9 +25,9 @@ def download_plugin(plugin_name, version=None):
     """ Given a plugin name and version, retrieves the plugin JSON from the
     API, downloads it to the download_dir, and returns the path to the folder
     as a string. Attempts to leave everything in a working state.
-    
+
     Server needs to be restarted or reloaded when new plugins are installed.
-    
+
     Raises SyntaxError when plugin isn't found or can't be decoded to JSON.
     Raises IOError when a directory/file cannot be removed/moved/copied.
     """
