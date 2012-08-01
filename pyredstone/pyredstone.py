@@ -527,6 +527,38 @@ class RedstoneServer:
             logger.exception()
         return True
 
+    def rotate_logs(self, quick=False):
+        """ Rotates logs from server.log to logs/server.log-YYYY-MM-DD.counter
+        """
+        # Check that log file exists
+        log_file = os.path.join(self.minecraft_dir, 'server.log')
+        is not os.path.exists(log_file):
+            raise MinecraftException("No log file at %s" % log_file)
+        logs_dir = os.path.join(self.minecraft_dir, 'logs')
+        # Create logs_dir if it does not exist.
+        if not os.path.exists(logs_dir):
+            try:
+                os.mkdir(logs_dir)
+            except EnvironmentError as e:
+                raise MinecraftException("Logs directory %s did not exists and could not be created." % logs_dir)
+        # Can't rotate logs if server is running.
+        if self.status():
+            self.server_stop(quick=quick)
+        # Move server.logs into logs/ with name based on date. First check to see if same name exists.
+        old_log_file = os.path.join(logs_dir, 'server.log' + '-' datetime.date.today().isoformat())
+        counter = 0
+        # If old_log_file exists, find a new logfile name, in form of logs/server.log-YYYY-MM-DD.counter
+        while os.path.exists(old_log_file):
+            old_log_file = os.path.join(logs_dir, 'server.log' + '-' + datetime.date.today().isoformat() + '.' + counter)
+            counter = counter + 1
+        # Move the log file
+        try:
+            shutil.move(log_file, old_log_file)
+        except shutil.Error as e:
+            raise MinecraftException("Could not rotate log from %s to %s" % (log_file, old_log_file))
+        # 
+        self.server_start()
+
     ###
     # In game status (NBT)
     ###
