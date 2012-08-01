@@ -532,7 +532,7 @@ class RedstoneServer:
         """
         # Check that log file exists
         log_file = os.path.join(self.minecraft_dir, 'server.log')
-        is not os.path.exists(log_file):
+        if not os.path.exists(log_file):
             raise MinecraftException("No log file at %s" % log_file)
         logs_dir = os.path.join(self.minecraft_dir, 'logs')
         # Create logs_dir if it does not exist.
