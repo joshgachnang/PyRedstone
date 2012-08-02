@@ -545,7 +545,7 @@ class RedstoneServer:
         if self.status():
             self.server_stop(quick=quick)
         # Move server.logs into logs/ with name based on date. First check to see if same name exists.
-        old_log_file = os.path.join(logs_dir, 'server.log' + '-' datetime.date.today().isoformat())
+        old_log_file = os.path.join(logs_dir, 'server.log' + '-' + datetime.date.today().isoformat())
         counter = 0
         # If old_log_file exists, find a new logfile name, in form of logs/server.log-YYYY-MM-DD.counter
         while os.path.exists(old_log_file):

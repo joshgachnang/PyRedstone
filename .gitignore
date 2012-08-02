@@ -1,7 +1,8 @@
 cherrypy
 cherrypy.tar.gz
 *output.log
-
+cherrypy.access
+cherrypy.log
 
 ######################
 # Python compiled files
