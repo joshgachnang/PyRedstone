@@ -545,7 +545,7 @@ class RedstoneServer:
         if self.status():
             self.server_stop(quick=quick)
         # Move server.logs into logs/ with name based on date. First check to see if same name exists.
-        old_log_file = os.path.join(logs_dir, 'server.log' + '-' + datetime.date.today().isoformat())
+        old_log_file = os.path.join(logs_dir, 'server.log' + '-' datetime.date.today().isoformat())
         counter = 0
         # If old_log_file exists, find a new logfile name, in form of logs/server.log-YYYY-MM-DD.counter
         while os.path.exists(old_log_file):
@@ -875,8 +875,6 @@ class RedstoneServer:
         of banned players/IP otherwise.
         """
         user_list = []
-        if player_type == 'None':
-            player_type = None
         if player_type not in ('player', 'ip', None):
             print "Player must be either 'player', 'ip', or None"
             return None
@@ -907,17 +905,13 @@ class RedstoneServer:
         if self._is_ip(player_or_ip):
             # IP!
             if self.is_banned(player_or_ip, 'ip'):
-                logger.warning("IP %s is already banned." % player_or_ip)
-		return False
-            self.console_cmd("ban-ip %s" % (player_or_ip,))
-            logger.info("Banned IP %s" % (player_or_ip,))
+                return False
+            self.console_cmd("ban-ip %s" % (player_or_ip))
         else:
             # Must be a player..or invalid IP
             if self.is_banned(player_or_ip, 'player'):
-                logger.warning("Player %s is already banned." % player_or_ip)
                 return False
             self.console_cmd("ban %s" % (player_or_ip))
-            logger.info("Banned player %s" % (player_or_ip,))
         return True
 
     def pardon(self, player_or_ip):
@@ -1017,7 +1011,7 @@ class RedstoneServer:
         not on the whitelist. Raises MinecraftCommandException if server command
         fails.
         """
-        if player in self.get_whitelist():
+        if player not in self.get_whitelist():
             return False
         self.console_cmd("whitelist remove %s" % (player))
         self._whitelist_reload()
