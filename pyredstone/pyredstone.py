@@ -197,7 +197,7 @@ class RedstoneServer:
             raise MinecraftCommandException("Command '%s' failed with exit code: %d" % (cmd, e.returncode))
         #print "Minecraft started in tmux session %s" % self.session_name
         logger.info("Server started successfully.")
-        return
+        return True
 
     def server_stop(self, quick=False, msg=None):
         """ Stops the server, optionally giving warning messages.
@@ -223,6 +223,7 @@ class RedstoneServer:
             time.sleep(15)
         self.console_cmd("stop")
         logger.info("Server successfully stopped.")
+        return True
 
     def server_restart(self, quick=False, msg=None):
         """ Restarts the server, optionally giving warning messages.
@@ -234,7 +235,7 @@ class RedstoneServer:
             self.server_stop(quick, msg=msg)
             while self.status():
                 time.sleep(1)
-        self.server_start()
+        return self.server_start()
 
     def status(self):
         """ Checks whether the Minecraft server is running.
