@@ -919,6 +919,7 @@ class RedstoneServer:
             self.console_cmd("ban %s" % (player_or_ip))
             logger.info("Banned player %s" % (player_or_ip,))
         return True
+
     def pardon(self, player_or_ip):
         """ Removes the ban on a player or IP. Attempts to determine if the arg is
         an IP or player. Returns False if the player is not banned or server
@@ -984,34 +985,43 @@ class RedstoneServer:
     def disable_whitelist(self):
         """ Disables the whitelist. All users can log in. """
         self.console_cmd("whitelist off")
+        return True
 
     def enable_whitelist(self):
         """ Prevents users not on the whitelist from connecting. Ops may
         always connect. """
         self.console_cmd("whitelist on")
+        return True
 
     # Renew whitelist from disk. Call after adding or removing from whitelist.
     def _whitelist_reload(self):
         """ Reloads the whitelist so changes take affect.
         """
         self.console_cmd("whitelist reload")
+        return True
 
     def add_to_whitelist(self, player):
-        """ Adds a player to the whitelist. Fails silently if player is already
+        """ Adds a player to the whitelist. Returns False if player is already
         on the whitelist. Raises MinecraftCommandException if server command
         fails.
         """
         if player not in self.get_whitelist():
             self.console_cmd("whitelist add %s" % (player))
             self._whitelist_reload()
+            return True
+        else:
+            return False
 
     def remove_from_whitelist(self, player):
         """ Removes a player from the whitelist. Fails silently if player is
         not on the whitelist. Raises MinecraftCommandException if server command
         fails.
         """
+        if player in self.get_whitelist():
+            return False
         self.console_cmd("whitelist remove %s" % (player))
         self._whitelist_reload()
+        return True
 
     ###
     #Plugins
