@@ -55,6 +55,7 @@ class Repeater():
         req = urllib2.Request(url, jdata, self.headers)
         f = urllib2.urlopen(req)
         j = json.loads(f.read())
+        print "Returning: ", j
         return j
 
     def batch(self, config_file, get_list):

@@ -17,5 +17,6 @@ setup(
         "nbt >= 1.3.0",
         "cherrypy >= 3.2.0",
         "magplus >= 0.2.1"
+        "linux-metrics >= 0.1.3",
     ],
 )
