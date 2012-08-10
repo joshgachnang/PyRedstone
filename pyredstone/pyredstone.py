@@ -671,7 +671,30 @@ class RedstoneServer:
         self.console_cmd("list")
         count = 0
         ret_list = []
-        for line in reversed(open("%s/server.log" % self.minecraft_dir).readlines()):
+        with open("%s/server.log" % self.minecraft_dir, "r") as f:
+            f.seek (0, 2)           # Seek @ EOF
+            fsize = f.tell()        # Get Size
+            f.seek(max(fsize-1024, 0), 0) # Set pos @ last n chars
+            lines = f.readlines()       # Read to end
+
+        lines = list(reversed(lines[-20:]))    # Get last 10 lines
+        # This returns True if any line is exactly find_str + "\n"
+        for line in lines:
+            if "players online:" in line and count < 20:
+                #print "Winning line: #", count, " ", line
+                # Find the number of players.
+                for chars in line.split():
+                    if '/' in chars:
+                        connected, max_players = chars.split('/')
+                        #print connected, max_players
+                        #print lines[count - int(connected):count]
+                        players = lines[count - int(connected):count]
+                        for player in players:
+                            stripped_player = player.replace('\x1b[m', '').strip()
+                            ret_list.append(stripped_player)
+                            #print "Stripped ", stripped_player
+                        return ret_list
+            # Code for 1.2.5 and previous..
             if "Connected players" in line and count < 20:
                 #print "winning line: ", line[:-5]
                 players = line[:-4].split()[5:]
@@ -679,7 +702,7 @@ class RedstoneServer:
                 break
             else:
                 count += 1
-                print line
+                #print "Odd line ", line
                 continue
             # Remove commas from players
             for player in players:
