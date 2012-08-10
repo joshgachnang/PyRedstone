@@ -16,6 +16,7 @@ import filecmp
 from magplus.magplus import MinecraftAssetsGetter
 import random
 import string
+import linux_metrics as lm
 
 
 # Config with logging config file
@@ -385,6 +386,40 @@ class RedstoneServer:
         mem_dict['free_minus_cache'] = popen[2].split()[3]
         return mem_dict
 
+    def server_stats(self, disk='sda', net='eth0', sample_duration=0.1):
+        """ Returns a dict of stats about the server, including CPU, memory,
+        disk and networking activity. Disk is a disk device in /dev, net is
+        the name of a networking device. Sample duration is how long the sampling
+        will take. 0.1 is low but will provide a better user experience through
+        a web interface.
+
+        {procs_running: number of processes currently running
+        cpu_use: CPU usage as a percentage.
+        cpu_iowait: Percent of time waiting for I/O in CPU time.
+        disk_busy: Amount of time the disk is busy
+        disk_reads: Total disk reads since last reboot
+        disk_writes: Total disk writes since last reboot.
+        }
+
+        """
+        stats_dict = {}
+        stats_dict['procs_running'] = lm.cpu_stat.procs_running()
+        cpu_stats = lm.cpu_stat.cpu_percents(sample_duration)
+        stats_dict['cpu_use'] = 100 - cpu_stats['idle']
+        stats_dict['cpu_iowait'] = cpu_stats['iowait']
+        stats_dict['disk_busy'] = lm.disk_stat.disk_busy(disk, sample_duration)
+        #r, w = lm.disk_stat.disk_reads_writes(disk)
+        #stats_dict['disk_reads'] = r
+        #stats_dict['disk_writes'] = w
+        used, total = lm.mem_stat.mem_stats()
+        # In Megabytes
+        stats_dict['mem_used'] = used / 1048576
+        stats_dict['mem_total'] = total / 1048576
+        # In Kilobits
+        rx_bits, tx_bits = lm.net_stat.rx_tx_bits(net)
+        stats_dict['net_tx'] = tx_bits / 1000
+        stats_dict['net_rx'] = rx_bits / 1000
+        print stats_dict
     ###
     # Server Settings
     ###
