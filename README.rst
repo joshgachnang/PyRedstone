@@ -93,3 +93,11 @@ A standard init wrapper around PyRedstone. It gives the standard '/etc/init.d/mi
 bin/init.d/redstone_server
 ---------------
 The redstone_server is an init wrapper for server.py. It allows you to start and stop server.py with the server. Acceptable commands are start, stop, restart, and status. You need to customize the USERNAME and CONFIG variables.
+
+Changes
+======
+* v0.2.0, 08/10/2012 -- Adding support for Minecraft 1.3, added server_stats, added lots of debugging, improved server for batch requests. 
+* v0.1.2, 07/15/2012 -- Adding ability to update.
+* v0.0.2, 07/10/2012 -- Initial release.
+
+
