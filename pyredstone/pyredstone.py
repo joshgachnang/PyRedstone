@@ -855,6 +855,10 @@ class RedstoneServer:
                 if sanitized_line == '':
                     # Empty line
                     continue
+                if len(sanitized_line.split()) == 1:
+                    # Most likely a line from a 'list' command, with the new 1.3 style of 'list'.
+                    # Ignore for now.
+                    continue
                 # Split so we can get date, time, etc
                 split_line = sanitized_line.split()
                 if len(split_line) < 4:
