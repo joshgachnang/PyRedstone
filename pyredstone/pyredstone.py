@@ -855,7 +855,7 @@ class RedstoneServer:
                     ret_list.append(("none", sanitized_line))
                 else:
                     # Standard log line
-                    finished_line = (split_line[0], split_line[1], split_line[2], split_line[3:])
+                    finished_line = (split_line[0], split_line[1], split_line[2], ' '.join(split_line[3:]))
                     ret_list.append(("none", finished_line))
                 count += 1
             if num_lines > 0:
