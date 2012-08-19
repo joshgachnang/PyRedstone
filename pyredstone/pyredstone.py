@@ -848,7 +848,14 @@ class RedstoneServer:
                     ret_list.append(("players", l[0], l[1], l[3], action))
                     count += 1
             elif log_filter == None:
+                # Returns: ['none', date, time, level, message] for normal messages
+                # Otherwise: ['none', 'message']
+                # Sanitizes
                 sanitized_line = self._sanitize_log_line(line)
+                if sanitized_line == '':
+                    # Empty line
+                    continue
+                # Split so we can get date, time, etc
                 split_line = sanitized_line.split()
                 if len(split_line) < 4:
                     # A non-standard line.
