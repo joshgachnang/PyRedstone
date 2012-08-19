@@ -51,18 +51,18 @@ class Repeater():
     def send_request(self, jdata, url=""):
         """ Given a JSON dict, send it to the server """
         url = urlparse.urljoin(self.server_url, url)
-        print "Sending: ", url, ",", jdata, ",", self.headers
+        #print "Sending: ", url, ",", jdata, ",", self.headers
         req = urllib2.Request(url, jdata, self.headers)
         f = urllib2.urlopen(req)
         j = json.loads(f.read())
-        print "Returning: ", j
+        #print "Returning: ", j
         return j
 
     def batch(self, config_file, get_list):
         """ Takes a list of tuples as get_list. The tuples should be of the form ("command", {arglist})
         The JSON will look like: {"username": username, "auth_token": auth_token, "config_path": config_path, "command": {"command", {arglist}}}
         """
-        print "starting batch"
+        #print "starting batch"
         jdata = {}
         jdata["username"] = self.username
         jdata["auth_token"] = self.auth_token
@@ -71,7 +71,7 @@ class Repeater():
 
         for action,args in get_list.items():
             jdata["action_list"][action] = {"action": action, "args": args}
-        print jdata["action_list"]
+        #print jdata["action_list"]
         #print "Jdata is ", json.dumps(jdata)
 
         #print json.loads(json.dumps(jdata))

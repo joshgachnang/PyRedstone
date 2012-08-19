@@ -848,7 +848,15 @@ class RedstoneServer:
                     ret_list.append(("players", l[0], l[1], l[3], action))
                     count += 1
             elif log_filter == None:
-                ret_list.append(("none", self._sanitize_log_line(line)))
+                sanitized_line = self._sanitize_log_line(line)
+                split_line = sanitized_line.split()
+                if len(split_line) < 4:
+                    # A non-standard line.
+                    ret_list.append(("none", sanitized_line))
+                else:
+                    # Standard log line
+                    finished_line = (split_line[0], split_line[1], split_line[2], split_line[3:])
+                    ret_list.append(("none", finished_line))
                 count += 1
             if num_lines > 0:
                 #print count, num_lines, count < num_lines
