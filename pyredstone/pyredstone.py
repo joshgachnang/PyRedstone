@@ -143,6 +143,8 @@ class RedstoneServer:
         line = line.replace('\x1b[35;1m', '')
         line = line.replace('\x1b[m', '')
         line = line.replace('\n', '')
+        line = line.replace('[33;22m', '')
+        line = line.replace('[37;1m', '')
         return line
 
     def download_file(self, url, output):
