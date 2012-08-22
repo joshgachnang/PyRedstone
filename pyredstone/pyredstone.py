@@ -606,6 +606,7 @@ class RedstoneServer:
         """ Finds the spawn coordinates. Returns a 3tuple of ints in the format
         (X, Y, Z) or None if the coordinates cannot be found.
         """
+        self.console_cmd("save-all")
         n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
@@ -616,6 +617,7 @@ class RedstoneServer:
         """ Finds the seed of the server. Returns the seed as a string, or
         None if the seed cannot be found.
         """
+        self.console_cmd("save-all")
         n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
@@ -627,6 +629,7 @@ class RedstoneServer:
         thundering, False if not thundering, and None if the thundering state
         cannot be found.
         """
+        self.console_cmd("save-all")
         n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
@@ -641,6 +644,7 @@ class RedstoneServer:
         raining, False if not raining, and None if the raining state
         cannot be found.
         """
+        self.console_cmd("save-all")
         n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
@@ -654,6 +658,7 @@ class RedstoneServer:
         """ Gets the current in game time. Returns the time as an int between
         0 and 23999, or None if the time cannot be found.
         """
+        self.console_cmd("save-all")
         n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
@@ -664,6 +669,7 @@ class RedstoneServer:
         """ Gets the current number of elapsed in game days. Returns the days
         as an int, or None if the days cannot be found.
         """
+        self.console_cmd("save-all")
         n = NBTFile('%s/%s/level.dat' % (self.minecraft_dir, self.session_name))
         if n == None:
             return None
