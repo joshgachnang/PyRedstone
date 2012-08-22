@@ -422,6 +422,7 @@ class RedstoneServer:
         stats_dict['net_tx'] = tx_bits / 1000
         stats_dict['net_rx'] = rx_bits / 1000
         print stats_dict
+        return stats_dict
     ###
     # Server Settings
     ###
